@@ -35,6 +35,10 @@ See [`docs/creacion-de-agentes.md`](docs/creacion-de-agentes.md) for BUILD (B1â€
 | `examples/` | External case studies (PaperEPN placeholders) |
 | `.cursor/plans/` | Orchestration prompts |
 
+## Repository
+
+**GitHub:** https://github.com/emilio-garcia-ie/from-thesis-to-paper
+
 ## PaperEPN reference workspace
 
 External example (not a submodule):  
