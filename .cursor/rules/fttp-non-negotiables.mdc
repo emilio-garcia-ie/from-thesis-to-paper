@@ -1,0 +1,55 @@
+---
+description: READ-ONLY archaeology roots, evidence honesty, smoke tests before codigo HANDOFF
+alwaysApply: true
+---
+
+# fttp non-negotiables
+
+## READ-ONLY roots (never modify)
+
+Treat these as **read-only evidence** unless the user gives a separate, explicit override:
+
+| Root | Role |
+|------|------|
+| `Thesis Code/` (master notebooks) | Formulation and workflow ground truth |
+| OneDrive verification trees (`Models comparison_/`, `multigrafo/`, `inst_generation/`, pilot EDA folders) | Run artifacts, logs, exports |
+| Thesis Overleaf project (when configured) | Narrative and table archaeology — **read-only** for agents |
+
+Writable workspace defaults: `memory/`, `paper/`, `experimentos/`, `codigo/` (only when SA5/SA11 explicitly ports code).
+
+## Evidence honesty
+
+- **Do not invent** objective values, gaps, runtimes, or instance counts.
+- Use **`TBD`** when a cell is not yet anchored to catalog, thesis table, or approved export.
+- Use **`DISCREPANCY`** (and document in `memory/` or `paper/REPRODUCIBILITY.md`) when log vs catalog vs thesis disagree — never silently pick the favorable number.
+- Prefer Excel/CSV summaries and catalog rows over dumping multi-GB `.log` files into chat.
+
+## Writer passes (one section per pass)
+
+When editing `paper/main.tex` or table fragments:
+
+1. Load `memory/paper_strategy_brief.md` and glossary (`memory/glossary_thesis_en.md` or template).
+2. Touch **one** IMRaD section or table family per agent invocation unless the plan explicitly batches parallel scopes.
+3. Do not claim results not supported by §5.1/§5.2 tables and the signed brief.
+
+## `codigo/` and tests
+
+Any change under `codigo/` (or refactored pipeline scripts the workspace treats as golden code) **requires** before HANDOFF:
+
+```bash
+./scripts/run_tests.sh smoke
+```
+
+- Exit code **0** — report PASS in closure.
+- Non-zero — **`TAREA INCOMPLETA`**; do not HANDOFF downstream writers that assume new code.
+
+## Packs
+
+- Core agents must run **without** Gurobi installed.
+- `optimization-or` pack skills live under `skills/packs/optimization-or/` — load only when `workspace.config.json` includes `"packs": ["optimization-or"]`.
+- Do not embed pack-specific MIP/GIS steps in core skills (pointer only).
+
+## Portfolio repo boundary
+
+- The standalone `from-thesis-to-paper` framework repo must **not** copy 57GB verification trees.
+- PaperEPN paths belong in `examples/` configs only, not as hard dependencies of the framework package.

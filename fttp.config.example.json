@@ -1,0 +1,24 @@
+{
+  "workspaceName": "paperepn-evrp-example",
+  "repoRoot": "/Users/emilio/Desktop/PaperEPN/mi-investigacion-opt",
+  "readOnlyRoots": [
+    "/Users/emilio/Desktop/PaperEPN/Thesis Code",
+    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/Models comparison_",
+    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/multigrafo",
+    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/inst_generation",
+    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/Pilot1 - Spatio-Temporal EDA_-Emilio's MacBook Pro (2)"
+  ],
+  "thesis": {
+    "overleafProjectId": "TBD-24-char-hex-or-empty",
+    "mainTexPath": "Capitulos/Resultados.tex"
+  },
+  "paper": {
+    "dir": "paper",
+    "mainTex": "main.tex"
+  },
+  "packs": ["optimization-or"],
+  "evidence": {
+    "catalog": "memory/thesis_experiment_catalog.md",
+    "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  }
+}

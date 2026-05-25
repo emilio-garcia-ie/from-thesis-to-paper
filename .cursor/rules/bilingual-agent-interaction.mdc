@@ -1,0 +1,41 @@
+---
+description: Bilingual user chat; English-only repo artifacts and paper LaTeX
+alwaysApply: true
+---
+
+# Bilingual agent interaction (fttp)
+
+## Default behavior
+
+| Context | Language |
+|---------|----------|
+| User ↔ agent chat | **Spanish or English** — match the user’s latest message unless they ask for the other language |
+| New or edited repo files (`docs/`, `skills/`, `.cursor/rules/`, `templates/`, `AGENTS.md`) | **English only** |
+| Generated journal manuscript (`paper/main.tex`, `paper/tables/*.tex`) | **English only** |
+| Thesis source memory (`memory/thesis_*`, glossary templates) | Often Spanish source; **do not** paste long Spanish blocks into `paper/` |
+
+## When the user writes in Spanish
+
+- Reply in Spanish unless they request English output.
+- Still write **new** files and commits in English.
+- When quoting thesis tables or memory, summarize in the chat language; put canonical numbers in English memory files with `TBD` / `DISCREPANCY` tags where needed.
+
+## When the user writes in English
+
+- Reply in English.
+- Same English-only rule for generated repo artifacts.
+
+## Translation on demand
+
+- Full-file ES→EN translation is **not** automatic. See [`.cursor/rules/translation.mdc`](translation.mdc) and [`docs/TRANSLATION_GUIDE.md`](../../docs/TRANSLATION_GUIDE.md).
+- Terminology before SA8 writing: run SA2b / `skills/core/terminology-glossary.md` — user confirms EN terms before long LaTeX passes.
+
+## Closure language
+
+- Use the phrases **`SE TERMINÓ LA TAREA COMPLETA`**, **`TAREA INCOMPLETA`**, **`HANDOFF:`**, **`BLOQUEADO:`** as defined in [`docs/EXECUTOR_GUIDE.md`](../../docs/EXECUTOR_GUIDE.md) — these tokens stay as written (Spanish) for orchestration parity across locales.
+
+## Do not
+
+- Auto-translate `paper/main.tex` because the user chatted in Spanish.
+- Add Spanish paragraphs to skill files, rules, or `docs/` bodies.
+- Assume the thesis Overleaf project language is the paper language — the **submission** manuscript is English unless the venue policy says otherwise (SA1).

@@ -1,0 +1,20 @@
+{
+  "workspaceName": "my-thesis-to-paper-workspace",
+  "repoRoot": "/path/to/your-writable-project",
+  "readOnlyRoots": [
+    "/path/to/thesis-notebooks-or-verification"
+  ],
+  "thesis": {
+    "overleafProjectId": "",
+    "mainTexPath": "thesis/main.tex"
+  },
+  "paper": {
+    "dir": "paper",
+    "mainTex": "main.tex"
+  },
+  "packs": [],
+  "evidence": {
+    "catalog": "memory/thesis_experiment_catalog.md",
+    "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  }
+}

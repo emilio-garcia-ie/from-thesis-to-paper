@@ -1,0 +1,25 @@
+{
+  "_note": "Illustrative PaperEPN layout only. Replace all /path/to/... placeholders. Do not commit real paths or secrets.",
+  "workspaceName": "paperepn-external-case-study",
+  "repoRoot": "/path/to/mi-investigacion-opt",
+  "readOnlyRoots": [
+    "/path/to/Thesis Code",
+    "/path/to/OneDrive/1-Thesis/1 Thesis Code/Models comparison_",
+    "/path/to/OneDrive/1-Thesis/1 Thesis Code/multigrafo",
+    "/path/to/OneDrive/1-Thesis/1 Thesis Code/inst_generation",
+    "/path/to/OneDrive/1-Thesis/1 Thesis Code/Pilot1 - Spatio-Temporal EDA"
+  ],
+  "thesis": {
+    "overleafProjectId": "",
+    "mainTexPath": "Capitulos/Resultados.tex"
+  },
+  "paper": {
+    "dir": "paper",
+    "mainTex": "main.tex"
+  },
+  "packs": ["optimization-or"],
+  "evidence": {
+    "catalog": "memory/thesis_experiment_catalog.md",
+    "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  }
+}

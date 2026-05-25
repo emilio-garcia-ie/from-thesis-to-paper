@@ -1,0 +1,36 @@
+---
+description: On-demand Spanish to English translation for fttp infra and memory banners
+alwaysApply: false
+---
+
+# Spanish → English translation (on demand)
+
+## Trigger (required)
+
+Apply this rule **only** when the user explicitly requests translation, e.g.:
+
+- “translate …”, “traducir …”, “EN version of …”
+- supplies a concrete path under the active workspace or fttp repo
+
+**Never** auto-translate because the user wrote in Spanish in chat. Spanish chat stays Spanish unless they ask for English output.
+
+## Scope
+
+- **In scope:** paths listed in [`docs/TRANSLATION_GUIDE.md`](../../docs/TRANSLATION_GUIDE.md) (Infra in scope / Banner-only tables).
+- **Out of scope:** `paper/main.tex`, `paper/tables/*.tex`, `codigo/**`, `experimentos/**`, `tests/**`, and all READ-ONLY trees (`Thesis Code/`, OneDrive verification folders).
+- For LaTeX manuscript drafting, use `skills/core/scientific-writing.md` instead.
+
+## Workflow
+
+1. **Classify** the request: `SCIENTIFIC` | `REPO` | `MIXED`.
+2. If `SCIENTIFIC` or `MIXED`, read `docs/TRANSLATION_GUIDE.md` before translating.
+3. **Discipline:** STEM / OR / optimization — formal journal English.
+4. **Preserve verbatim:** experiment IDs, `model_id` tokens, file paths, shell commands, code blocks, URLs, LaTeX macros when describing the paper.
+5. **Output:** deliver **only** the translated text (no preamble), unless the user asked for notes.
+6. **Optional footer** (one line): `Guide updated: N entries` when you appended ≤3 glossary rows to the guide Maintenance section.
+
+## Do not
+
+- Edit verification trees or master notebooks as part of translation.
+- Rewrite the Translation Guide body — append-only Maintenance log only.
+- Translate `paper/main.tex` via this rule unless the user gives a separate, explicit manuscript task.

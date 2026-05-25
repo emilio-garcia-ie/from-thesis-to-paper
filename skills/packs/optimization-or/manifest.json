@@ -1,0 +1,46 @@
+{
+  "id": "optimization-or",
+  "version": "1.0.0",
+  "description": "Optional OR pack: MIP/Gurobi modeling, routing multigraphs, GIS instances, math audit, log lineage, notebook refactor ports.",
+  "skills": [
+    {
+      "slug": "mip-modeling-gurobi",
+      "file": "mip-modeling-gurobi.md",
+      "agents": ["SA3b", "SA5", "SA11"]
+    },
+    {
+      "slug": "graph-theory-routing",
+      "file": "graph-theory-routing.md",
+      "agents": ["SA3", "SA5"]
+    },
+    {
+      "slug": "comp-geometry-gis",
+      "file": "comp-geometry-gis.md",
+      "agents": ["SA3", "SA5"]
+    },
+    {
+      "slug": "math-audit-mip",
+      "file": "math-audit-mip.md",
+      "agents": ["SA3b"]
+    },
+    {
+      "slug": "gurobi-log-lineage",
+      "file": "gurobi-log-lineage.md",
+      "agents": ["SA4", "SA4o"]
+    },
+    {
+      "slug": "refactor-port-mip",
+      "file": "refactor-port-mip.md",
+      "agents": ["SA5", "SA11"]
+    }
+  ],
+  "requires": {
+    "optional": ["gurobipy", "gurobi_cl"],
+    "license": "Gurobi academic or commercial license required for solve and re-solve workflows; core agents must run without Gurobi installed."
+  },
+  "enable": {
+    "configKey": "packs",
+    "value": "optimization-or",
+    "doc": "docs/PACKS.md"
+  }
+}

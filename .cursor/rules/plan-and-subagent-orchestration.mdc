@@ -1,0 +1,192 @@
+---
+description: Plans + agent-chosen subagent topology (seq/parallel/async); prompts on demand; user launches each chat
+alwaysApply: true
+---
+
+# Plan + subagent orchestration (from-thesis-to-paper / fttp)
+
+Apply when the user asks to **create a plan**, **get subagent prompts**, or **run part of a plan** — unless they say “no subagents” or “solo en este chat”.
+
+## User intent → agent behavior (default)
+
+| User says | Agent does | Agent does **not** do (unless explicit override) |
+|-----------|------------|--------------------------------------------------|
+| “Haz un plan para …” | Phase A: **slim** plan file (DoD, topology, launch map, subagent map) — **no** full prompt dumps inside `.plan.md` | Auto-launch subagents; embed 26 prompts in plan unless user asks |
+| “Dame los prompts” / “prompt N” / “Guía de ejecución” | Phase C: **Guía first**, then copy-paste `text` blocks **in chat** (or optional sidecar `.cursor/plans/<slug>_prompts.md` if user asks to save) | Summarize prompts; skip Guía |
+| “Dame el prompt del subagente N” / “prompts en orden” | Deliver copy-paste block(s) for requested step(s) only | Run other steps |
+| “Ejecuta SA3” / pastes one subagent prompt | Run **that scope only** in current chat; closure protocol | Advance to SA4 without user OK |
+| “Ejecuta el plan X” | **Interpret as:** show launch map + offer prompt 1 (or next pending). User launches each chat. | Batch-launch 8 workers silently |
+| “Ejecuta el plan completo sin preguntar” / Multitask + explicit batch | May delegate via Task tool in background | Skip handoff blocks |
+| Small fix, one file | Normal single-session work | Force subagent decomposition |
+
+**Default control model:** the **user** decides how many subagents to launch and when. The **agent** decides **how many subagents the plan needs** and **which steps are sequential, parallel, or async**.
+
+Override batch execution only when the user uses an explicit phrase like *“lanza todos los subagentes”* or Multitask with that intent.
+
+---
+
+## Topology types (agent must label each block)
+
+| Type | Symbol | Meaning | Launch rule |
+|------|--------|---------|-------------|
+| **Sequential** | `→` | Step B needs output or artifacts from step A | Launch B only after A reports **SE TERMINÓ LA TAREA COMPLETA** |
+| **Parallel** | `∥` | Steps share no write paths; same precondition | User may open 2+ chats at once; merge before next sequential gate |
+| **Async** | `~>` | Step can start anytime; **no** input from other steps (read-only audit, docs, figures on fixed paths) | User may run early or late; note in plan if it **must** finish before a gate (then mark parallel or sequential instead) |
+
+Every plan must include a **Launch map** section, e.g.:
+
+```text
+1 → 2 → 3 → (4 ∥ 5) → 6 → 7 → 8
+     async optional: 11 ~> after 3 (figures; no main.tex edits)
+```
+
+Use mermaid in the plan file when more than 3 nodes.
+
+---
+
+## Agent criteria: how many subagents (N)
+
+The agent **proposes N** in the plan (not the user). Guidelines:
+
+| Factor | More subagents | Fewer subagents |
+|--------|----------------|-----------------|
+| Domains | Python + LaTeX + docs split | Same file family |
+| Risk | pytest/build gates between stages | Read-only audit |
+| Context | &gt; ~40 lines or &gt;3 files per scope | One script + one test file |
+| Model strength | Weaker executor expected | Strong single session OK |
+
+**Target N:** usually **4–10** for multi-phase work; **1–3** for medium tasks; **never** split a single-file fix.
+
+**Merge rule:** combine SAs that touch the same files in sequence (e.g. SA1+SA2 code+tests). **Split rule:** separate read-only preflight (async) from writers; separate LaTeX Results from LaTeX Intro if parallel after tables exist.
+
+Document in plan: **“Recomendación: N subagentes porque …”**
+
+---
+
+## Phase A — Create the plan
+
+1. Read `memory/*`, `AGENTS.md`, `docs/EXECUTOR_GUIDE.md`, existing `.cursor/plans/*.plan.md`.
+2. Save: `.cursor/plans/<slug>_<id>.plan.md`.
+3. Required sections:
+   - Goal, non-goals, prerequisites
+   - **Definition of Done** (numbered + verify commands)
+   - Task checklist with stable IDs
+   - **Subagent map** (ID → todo IDs → files → topology type)
+   - **Launch map** (seq / parallel / async)
+   - **Recomendación N subagentes** (one paragraph, agent rationale)
+4. Frontmatter todos mirror checklist IDs.
+5. End with: approve plan **or** ask *“¿Empiezo con el prompt del subagente 1?”* — do not start execution unless asked.
+6. **Do not** paste full subagent `text` blocks inside the plan file by default — user launches from **Phase C** delivery in chat.
+
+**Template:** [`.cursor/plans/_TEMPLATE_subagent_execution_plan.md`](../plans/_TEMPLATE_subagent_execution_plan.md)
+
+---
+
+## Phase B — Subagent prompt content (authoring standard)
+
+When generating prompts (for Phase C delivery, not necessarily inside the plan file), each physical subagent = one `text` block. Header must include **topology**:
+
+```
+PLAN: <title> | SUBAGENTE <n> de <N> | <SA ids> | TOPOLOGÍA: secuencial|paralelo|async
+REPO: <workspace root or fttp repo path from plan>
+PRECONDICIÓN: …
+ESPERA A: Subagente X (solo si secuencial) | Ninguno (async) | Tras Subagente Y (paralelo, mismo gate)
+```
+
+Body: ROL, LEE, TAREAS, EJECUTA, PROHIBIDO, ENTREGABLE.
+
+**CIERRE DE TAREA** (required):
+
+- **SE TERMINÓ LA TAREA COMPLETA (Subagente n / …)** if acceptance met
+- **HANDOFF:** next prompt number(s); if parallel, list both; handoff payload ≤5 lines
+- **TAREA INCOMPLETA** + blocker + fix; **BLOQUEADO: no lanzar prompt Z**
+
+---
+
+## Phase C — Prompt delivery (user-controlled execution)
+
+When the user asks for prompts to run a plan (“dame los prompts”, “ejecuta el plan X”, “prompts en orden”, “prompt N”):
+
+### Mandatory preamble — **Guía de ejecución** (always first)
+
+Before any `text` copy block, output this section so the user knows **when** and **which** prompt to launch:
+
+```markdown
+## Guía de ejecución — <plan title>
+
+**N subagentes recomendados:** <N> — <one line why>
+
+### Topología (cómo leerla)
+| Símbolo | Tipo | Qué haces tú |
+|---------|------|--------------|
+| → | Secuencial | Termina A; revisa cierre; luego lanza B con su prompt |
+| ∥ | Paralelo | Tras el mismo gate, abre 2+ chats a la vez (prompts distintos) |
+| ~> | Async | Puedes lanzar cuando quieras; no necesita output de otro |
+
+### Mapa de lanzamiento
+<ASCII or numbered list, e.g. 1 → 2 → 3 → (4 ∥ 5) → 6>
+
+### Estado (actualiza según avances)
+| # | Subagente | Topología | Prompt listo | Tu acción |
+|---|-----------|-----------|--------------|-----------|
+| 1 | SA0 … | async | abajo | Lanzar ya (solo lectura) |
+| 2 | SA1+2 … | secuencial | abajo | Tras 1 ✓ |
+| … | | | | |
+
+### Reglas rápidas
+- **Siguiente si todo OK:** Subagente <k> (prompt <k>)
+- **Paralelo ahora:** Subagentes <a> y <b> juntos — solo tras Subagente <gate> ✓
+- **No lanzar si:** prior reportó **TAREA INCOMPLETA** o pytest/build FAIL
+- **Pedir un solo prompt:** “dame el prompt 3” → solo entregas fila 3 + bloque 3
+```
+
+Then deliver prompt block(s).
+
+### Delivery rules
+
+1. **Always** include **Guía de ejecución** before prompts (full map for “todos en orden”; mini-map for “prompt N” showing where N sits in the chain).
+2. Number prompts **1…N** matching the Guía table; each block header must repeat `SUBAGENTE <n> de <N>` and `TOPOLOGÍA: …`.
+3. For **parallel** rows, state explicitly: *“Abre dos chats: pega Prompt 4 en uno y Prompt 5 en otro; espera ambos antes del Prompt 6.”*
+4. For **async** rows, state: *“No bloquea a otros; opcional lanzar antes del gate X.”*
+5. Deliver only requested prompts when asked narrowly; still show at least a **3-line mini Guía** (mapa + “eres el paso N de M”).
+6. After user reports a subagent result: update **Estado** table mentally in reply; one-line confirm + **next prompt number(s)** + whether parallel.
+7. Update plan todo `status` when user confirms success.
+8. Do **not** dump full subagent summary unless asked.
+
+When user pastes a subagent prompt into chat: execute **only that block**.
+
+---
+
+## Anti-patterns
+
+- Treating “ejecuta el plan” as permission to run all steps without user per-step launch
+- Parallel steps that edit the same file (e.g. two chats on `main.tex`)
+- Async labeled steps that actually need prior pytest PASS
+- 15+ micro-subagents for &lt;30 min work
+- Prompts without PRECONDICIÓN / HANDOFF / BLOQUEADO
+- Advancing after **TAREA INCOMPLETA** without user override
+
+---
+
+## Limits
+
+- Subagents do not share memory; handoff text is mandatory.
+- Parallel = different write sets or read-only branches.
+- Tier B / partial evidence must be visible in plan and Experiments prose, not hidden.
+- Invented table numbers or silent log/catalog picks (use `TBD` / `DISCREPANCY` per `fttp-non-negotiables.mdc`).
+
+---
+
+## User activation cheat sheet (copy to Cursor User Rules if desired)
+
+**This rule is `alwaysApply: true` — you do not need to re-explain topology or Guía.**
+
+| Goal | Say |
+|------|-----|
+| New slim plan | `Haz un plan para <tarea>` |
+| Prompts to run it | `Dame los prompts del plan <slug>` or `Guía + prompt 3` |
+| Next step | `<SA> terminó OK — siguiente prompt` |
+| Run one step in this chat | Paste one `text` block only |
+| No subagents | `solo en este chat` |
+
+**Opt-in full prompts inside plan file:** only if user says `incluye prompts en el plan`.

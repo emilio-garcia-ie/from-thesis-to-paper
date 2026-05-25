@@ -1,0 +1,12 @@
+node_modules/
+.venv/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+*.pdf
+.overleaf-mcp/
+python/fttp.egg-info/
+*.egg-info/
+.DS_Store

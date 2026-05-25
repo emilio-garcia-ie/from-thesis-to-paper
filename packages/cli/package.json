@@ -1,0 +1,16 @@
+{
+  "name": "from-thesis-to-paper",
+  "version": "0.1.0",
+  "description": "CLI wrapper for the fttp Python paper pipeline",
+  "license": "MIT",
+  "type": "commonjs",
+  "bin": {
+    "fttp": "./src/cli.js"
+  },
+  "files": [
+    "src/cli.js"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
