@@ -1,6 +1,6 @@
 # Sync checklist — Cursor ↔ Claude Code
 
-> **Canonical (P10):** this file. **Extended PaperEPN log:** [`memory/sync_cursor_claude.md`](../memory/sync_cursor_claude.md) (parity gaps, paper v2 snapshot).
+> **Canonical (P10):** this file. **Extended PaperEPN log:** [`memory/sync_cursor_claude.md`](../memory/sync_cursor_claude.md) in the user workspace (e.g. `mi-investigacion-opt/memory/`) — parity gaps, paper v2 snapshot.
 
 Use when you change **entry files**, workflow guardrails, skill packs, orchestration, or workspace map.
 
@@ -22,17 +22,24 @@ flowchart TB
     AG[AGENTS.md]
     CRUL[.cursor/rules/]
     CSK[.cursor/skills/]
-    MCP[.cursor/mcp.json optional Overleaf]
+    MCPc[.cursor/mcp.json optional Overleaf]
   end
 
   subgraph claude [Claude Code only]
     CL[CLAUDE.md]
     CSK2[.claude/skills/]
-    SH[ShelbyMCP optional]
+    PERM[.claude/settings.local.json optional]
+  end
+
+  subgraph optionalMCP [Optional MCP — both stacks]
+    SH[ShelbyMCP graph memory]
+    OL[Overleaf MCP thesis read-only]
   end
 
   cursor --> shared
   claude --> shared
+  optionalMCP -.-> cursor
+  optionalMCP -.-> claude
 ```
 
 | Layer | Cursor | Claude | Must match? |
@@ -45,9 +52,11 @@ flowchart TB
 | Orchestration topology | `.cursor/rules/plan-and-subagent-orchestration.mdc` | read same rule path | **Yes** |
 | Runtime SA prompts | `.cursor/plans/from-thesis-to-paper_orchestration.plan.md` | same path | **Yes** |
 | Gurobi `gurobi_cl` | both entry files | both entry files | **Yes** |
-| Overleaf | `.cursor/mcp.json` optional | `npx overleaf-mcp` — **no** `.cursor/mcp.json` required | Documented both |
-| Shelby | — | optional `.claude/settings.local.json` | Claude-only OK |
+| Overleaf | `.cursor/mcp.json` optional (project) | `npx overleaf-mcp` — **no** `.cursor/mcp.json` required | Documented both |
+| Shelby | `~/.cursor/mcp.json` or project `.cursor/mcp.json`; User Rules Memory Protocol | `claude mcp` user scope + `.claude/settings.local.json` | **Yes** (optional both; same graph on one machine) |
 | Domain skills | `.cursor/skills/` | `.claude/skills/` | Same intent when mirrored |
+
+**Shelby detail:** [`docs/MCP_SHELBY_OPTIONAL.md`](MCP_SHELBY_OPTIONAL.md). **Not** a substitute for git-tracked `memory/` for catalog numbers.
 
 ---
 
@@ -113,14 +122,17 @@ Both entry files must cite the same `memory/` files:
 
 ### 8 — Overleaf
 
-- [ ] Cursor: `.cursor/mcp.json` + `docs/OVERLEAF_MCP_SETUP.md` (optional)
+- [ ] Cursor: `.cursor/mcp.json` + `docs/OVERLEAF_MCP_SETUP.md` or `docs/MCP_OVERLEAF_OPTIONAL.md` (optional)
 - [ ] Claude: `npx overleaf-mcp` / terminal — **not** requiring `.cursor/mcp.json`
 - [ ] Thesis read-only; local `paper/` canonical for submission
 
-### 9 — Shelby (Claude only)
+### 9 — Shelby (optional — both stacks)
 
-- [ ] Documented as optional in `CLAUDE.md` and `memory/agent_stack.md`
-- [ ] Not required in `AGENTS.md`
+- [ ] [`docs/MCP_SHELBY_OPTIONAL.md`](MCP_SHELBY_OPTIONAL.md) exists and matches your install
+- [ ] **Cursor:** `npx shelbymcp setup cursor` (or `~/.cursor/mcp.json` entry); Memory Protocol in User Rules; MCP shows connected
+- [ ] **Claude:** `npx shelbymcp setup claude-code` (or user-scope `claude mcp`); workspace `.claude/settings.local.json` allows `mcp__shelbymcp__*` if needed
+- [ ] Both entry files + `memory/agent_stack.md` document Shelby as **optional on both** (not Claude-only)
+- [ ] Agents do not treat Shelby as numeric authority over `memory/thesis_experiment_catalog.md`
 
 ### 10 — Translation (on demand)
 
@@ -139,7 +151,8 @@ Both entry files must cite the same `memory/` files:
 | Orchestration | rule + plans table | same paths in `CLAUDE.md` | `EXECUTOR_GUIDE.md` |
 | New core skill | `.cursor/skills/` | `.claude/skills/` | `skills/core/*.md` |
 | New pack skill | `.cursor/skills/packs/` | mirror if used | `skills/packs/` |
-| Parity gap log | — | — | `memory/sync_cursor_claude.md` |
+| Shelby MCP | `AGENTS.md` § Shelby + User Rules | `CLAUDE.md` § Shelby + permissions | `docs/MCP_SHELBY_OPTIONAL.md` |
+| Parity gap log | — | — | user workspace `memory/sync_cursor_claude.md` |
 
 ---
 
@@ -149,8 +162,8 @@ Both entry files must cite the same `memory/` files:
 cd mi-investigacion-opt && ./scripts/run_tests.sh smoke
 ```
 
-**Cursor:** New chat → cites `AGENTS.md`, six folders, does not treat `CLAUDE.md` as entry.  
-**Claude:** New session → loads `CLAUDE.md`, same shared playbook path, does not treat `AGENTS.md` as entry.
+**Cursor:** New chat → cites `AGENTS.md`, six folders, does not treat `CLAUDE.md` as entry. If Shelby enabled → MCP `shelbymcp` connected.  
+**Claude:** New session → loads `CLAUDE.md`, same shared playbook path, does not treat `AGENTS.md` as entry. If Shelby enabled → `/mcp` lists `shelbymcp`.
 
 ---
 
@@ -159,5 +172,6 @@ cd mi-investigacion-opt && ./scripts/run_tests.sh smoke
 | Date | Change | By |
 |------|--------|-----|
 | 2026-05-24 | P10: entry boundary, packs, EXECUTOR_GUIDE, fttp plans; `docs/sync` canonical | B11 |
+| 2026-05-25 | ShelbyMCP parity: both stacks; `docs/MCP_SHELBY_OPTIONAL.md`; checklist §9 | Agent |
 
 _Update this table when you complete a sync._

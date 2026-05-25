@@ -1,8 +1,8 @@
 # Paper Production Pipeline
 
-> End-to-end flow from evidence artifacts to journal-ready PDF. Covers **planned** `fttp` CLI (P6–P7) and **current** PaperEPN scripts.
+> End-to-end flow from evidence artifacts to journal-ready PDF. **C1:** consumer scripts via `hooks` in `fttp.config.json`. **C2:** reusable checks in `python/fttp/evidence/`.
 
-See also: [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md), [`ARCHITECTURE.md`](ARCHITECTURE.md).
+See also: [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md), [`ARCHITECTURE.md`](ARCHITECTURE.md), [`TESTING.md`](TESTING.md).
 
 ---
 
@@ -10,133 +10,126 @@ See also: [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md), [`ARCHITECTURE.md`](ARCHITEC
 
 ```mermaid
 flowchart LR
-  A[Audit_evidence] --> B[Export_tables]
-  B --> C[Build_evidence_bundle]
-  C --> D[Generate_figures]
-  D --> E[Compile_LaTeX]
+  A[Hook_lineageBuild] --> B[Hook_tables]
+  B --> C[Hook_evidence]
+  C --> D[Hook_figures]
+  D --> E[Hook_compile]
   E --> F[Verify_smoke_tests]
   F --> G[main.pdf]
 ```
 
 | Stage | Purpose | Primary outputs |
 |-------|---------|-----------------|
-| **Evidence audit** | Join catalog, logs, JSON; flag discrepancies | `memory/*`, lineage CSV, memoria notes |
+| **Lineage build** | Parse logs / merge JSON fallback (consumer script) | `experimentos/evidence/log_lineage.csv` |
 | **Tables** | LaTeX fragments from catalog/strategy | `paper/tables/*.tex` |
-| **Evidence bundle** | Reproducibility manifest | `paper/REPRODUCIBILITY.md`, bundle metadata |
+| **Evidence bundle** | Reproducibility manifest | `paper/REPRODUCIBILITY.md` |
 | **Figures** | TikZ/raster per strategy brief | `paper/figures/*` |
-| **Compile** | PDF from `main.tex` | `paper/main.pdf` |
-| **Verify** | Smoke tests, figure legend, table keys | pytest green |
+| **Compile** | PDF from active venue `mainTex` | `paper/*.pdf` |
+| **Verify** | Framework or consumer smoke tests | pytest green |
 
-**Strategy gate:** `memory/paper_strategy_brief.md` (signed narrative, allowed/forbidden claims) must exist before SA8 writing and table export policy.
+**Strategy gate:** signed `memory/paper_strategy_brief.md` in the **consumer workspace** before SA8 writing.
 
 ---
 
 ## 2. `fttp` CLI subcommands
 
-**Implementation status:** planned in master plan P6 (Python) + P7 (npm). Not yet present in PaperEPN root; commands below are the **contract** for `npx from-thesis-to-paper`.
+Install: `pip install -e .` from this repository.
 
-| Subcommand | Alias | Description | Depends on config | Planned verify |
-|------------|-------|-------------|-------------------|----------------|
-| `doctor` | — | Check `fttp.config.json`, paths exist, optional Gurobi hint | `repoRoot`, `readOnlyRoots` | exit 0 |
-| `tables` | `tables export` | Export LaTeX table fragments from evidence catalog | `evidence.catalog`, `paper.dir` | files under `paper/tables/` |
-| `evidence` | `evidence build` | Build reproducibility bundle / lineage summary | `evidence.*` | bundle paths exist |
-| `figures` | — | Generate or refresh figure assets per manifest | `paper.dir` | `paper/figures/` updated |
-| `compile` | `paper compile` | Run latexmk (or configured engine) on `paper.mainTex` | `paper.mainTex` | `main.pdf` exists |
-| `pipeline` | — | Run `tables` → `evidence` → `figures` → `compile` in order | full config | exit 0, PDF exists |
+| Subcommand | Description | Config keys |
+|------------|-------------|-------------|
+| `doctor` | Validate config, `repoRoot`, optional hook paths | `repoRoot`, `hooks`, `paper` |
+| `tables` | Run `hooks.tables` under `repoRoot` | `hooks.tables` |
+| `evidence` | Run `hooks.evidence` | `hooks.evidence` |
+| `figures` | Run `hooks.figures` | `hooks.figures` |
+| `compile` | Run venue `build`, else `hooks.compile`, else verify PDF | `paper.activeVenue`, `venueProfiles`, `hooks.compile` |
+| `lineage` | `lineage validate --csv …` (C2 library) or `lineage build` → `hooks.lineageBuild` | `hooks.lineageBuild`, `evidence.lineageCsv` |
+| `pipeline` | `tables` → `evidence` → `figures` → `compile` (stops on first non-zero exit) | full config |
 
-### 2.1 Invocation (after P7)
-
-```bash
-# From workspace root (where fttp.config.json lives)
-npx from-thesis-to-paper doctor
-npx from-thesis-to-paper tables
-npx from-thesis-to-paper evidence
-npx from-thesis-to-paper figures
-npx from-thesis-to-paper compile
-npx from-thesis-to-paper pipeline
-```
-
-Environment override:
+### 2.1 Invocation
 
 ```bash
-export FTTP_CONFIG=/absolute/path/to/fttp.config.json
-npx from-thesis-to-paper doctor
+export FTTP_CONFIG=/path/to/your-workspace/fttp.config.json
+python -m fttp doctor
+python -m fttp lineage build
+python -m fttp tables
+python -m fttp evidence
+python -m fttp figures
+python -m fttp compile
+python -m fttp pipeline
 ```
 
 ### 2.2 Failure behavior
 
-If any subcommand fails, the CLI should exit non-zero. Executors must report **`TAREA INCOMPLETA`** and not run downstream stages (e.g. do not `compile` if `tables` failed).
+Subcommands **propagate** the hook script exit code. No “stub OK” on failure. If a hook is missing, the CLI exits non-zero with a configuration hint.
 
----
-
-## 3. PaperEPN equivalents (today)
-
-Until `fttp` ships, use these scripts from `mi-investigacion-opt` repo root:
-
-| fttp stage | PaperEPN script / action | Notes |
-|------------|--------------------------|-------|
-| Evidence / lineage | `scripts/archaeology/build_log_lineage.py`, `join_catalog.py`, notebooks under `scripts/archaeology/notebooks/` | Token protection: no full log dumps in chat |
-| Tables export | `scripts/paper/export_tables_from_catalog.py` | Honors `paper_strategy_brief` |
-| Evidence bundle | `scripts/paper/build_evidence_bundle.py` | |
-| Log extraction | `scripts/paper/extract_log_evidence.py` | |
-| Figures | `scripts/paper/generate_figures.py` | See `scripts/paper/FIGURE_SOURCES.md` |
-| OSM / route figs | `scripts/paper/fetch_osm_graph.py`, `scripts/viz/*` | Optional |
-| LaTeX compile | `cd paper && latexmk -pdf main.tex` | |
-| Tests | `./scripts/run_tests.sh smoke` | Gurobi smoke, lineage, paper pipeline |
-
-### 3.1 Typical manual sequence (PaperEPN)
+Optional validation without hooks:
 
 ```bash
-cd /path/to/mi-investigacion-opt
-
-# 1. Tables (after catalog and strategy brief are current)
-python scripts/paper/export_tables_from_catalog.py
-
-# 2. Evidence bundle
-python scripts/paper/build_evidence_bundle.py
-
-# 3. Figures
-python scripts/paper/generate_figures.py
-
-# 4. LaTeX
-cd paper && latexmk -pdf main.tex
-
-# 5. Verify
-cd .. && ./scripts/run_tests.sh smoke
+python -m fttp lineage validate --csv experimentos/evidence/log_lineage.csv
 ```
 
-Adjust flags per script `--help`. Archaeology scripts may run earlier in the project lifecycle (Phase 2 in AGENTS.md).
+Uses `fttp.evidence` (generic CSV columns + Gurobi status helpers) — no OneDrive paths in the framework package.
 
 ---
 
-## 4. LaTeX structure (PaperEPN reference)
+## 3. Hooks contract (C1)
 
-| Path | Role |
-|------|------|
-| `paper/main.tex` | IMRaD manuscript entry |
-| `paper/tables/*.tex` | `\input{}` fragments for Results |
-| `paper/figures/` | Graphics and TikZ sources |
-| `paper/REPRODUCIBILITY.md` | Tier B discrepancies, recompute policy |
-| `paper/JOURNAL_GUIDELINES.md` | Venue constraints (C&OR, etc.) |
+In `fttp.config.json` (paths **relative to `repoRoot`**):
 
-Writer agents (SA8) add **one section per pass**; verifier (SA9) runs compile + smoke tests.
+```json
+"hooks": {
+  "lineageBuild": "scripts/archaeology/build_log_lineage.py",
+  "tables": "scripts/paper/export_tables_from_catalog.py",
+  "evidence": "scripts/paper/build_evidence_bundle.py",
+  "figures": "scripts/paper/generate_figures.py",
+  "compile": "scripts/paper/build_primary.sh"
+}
+```
+
+Illustrative consumer layout: [`examples/paperepn-external.config.json`](../examples/paperepn-external.config.json).
+
+Heavy EVRP scripts stay in the **user workspace**; the framework only delegates via subprocess (`cwd=repoRoot`).
 
 ---
 
-## 5. Agent pipeline mapping (runtime)
+## 4. Venue profiles (C3)
 
-After framework build, orchestration subagents map to pipeline stages:
+User-defined venues (not hardcoded to a single publisher):
+
+```json
+"paper": {
+  "dir": "paper",
+  "mainTex": "main.tex",
+  "activeVenue": "primary",
+  "venueProfiles": {
+    "primary": {
+      "id": "user_defined_journal",
+      "mainTex": "main_journal.tex",
+      "guidelines": "paper/JOURNAL_GUIDELINES.md",
+      "build": "scripts/paper/build_primary.sh"
+    }
+  }
+}
+```
+
+`fttp compile` uses `venueProfiles[activeVenue].build` when set, else `hooks.compile`, else checks PDF next to `resolve_active_main_tex(cfg)`.
+
+Bring your own document class under `paper/` in the consumer repo — see [`templates/paper/README.md`](../templates/paper/README.md).
+
+---
+
+## 5. Agent pipeline mapping
 
 | Agent | Pipeline contribution |
 |-------|-------------------------|
 | SA3, SA4 | Evidence audit, catalog joins |
 | SA7 | Paper strategy brief |
-| SA8 | Prose in `main.tex` |
+| SA8 | Prose in `main.tex` (consumer) |
 | SA9 | Figures + LaTeX verify |
-| SA12 | Optional Overleaf sync (**paper** project only) |
+| SA12 | Optional Overleaf sync (paper project only) |
 | SA13 | Submission packaging |
 
-Launch order: see [`from-thesis-to-paper_orchestration.plan.md`](../.cursor/plans/from-thesis-to-paper_orchestration.plan.md) Guía de ejecución.
+Launch order: [`.cursor/plans/from-thesis-to-paper_orchestration.plan.md`](../.cursor/plans/from-thesis-to-paper_orchestration.plan.md).
 
 ---
 
@@ -144,25 +137,14 @@ Launch order: see [`from-thesis-to-paper_orchestration.plan.md`](../.cursor/plan
 
 | Gate | Command / check |
 |------|-----------------|
-| Config valid | `npx from-thesis-to-paper doctor` (future) or manual JSON parse |
-| No invented numbers | Tables trace to catalog or log lineage |
-| Smoke tests | `./scripts/run_tests.sh smoke` |
-| PDF exists | `test -f paper/main.pdf` |
-| Discrepancies | Documented in `REPRODUCIBILITY.md` only, not Results body |
+| Config valid | `python -m fttp doctor` |
+| Hooks wired | `hooks.*` paths exist under `repoRoot` (doctor warns) |
+| Framework tests | `./scripts/run_tests.sh smoke` in **from-thesis-to-paper** |
+| Consumer tests | `./scripts/run_tests.sh smoke` in user workspace |
+| No invented numbers | Tables trace to catalog or lineage (SA4) |
 
-On failure: stop and report **`TAREA INCOMPLETA`** per [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md).
-
----
-
-## 7. Configuration keys used by pipeline
-
-From `fttp.config.json` (see [`ARCHITECTURE.md`](ARCHITECTURE.md)):
-
-- `paper.dir`, `paper.mainTex` — compile target
-- `evidence.catalog` — table export source
-- `evidence.lineageCsv` — log join for Tier A/B evidence
-- `readOnlyRoots` — archaeology only; scripts read, never write
+On failure: **TAREA INCOMPLETA** per [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md).
 
 ---
 
-*CLI contract from master plan P6–P7; PaperEPN scripts as interim implementation.*
+*C1 = hooks delegation; C2 = `fttp.evidence` library; consumer scripts remain in the user repository.*

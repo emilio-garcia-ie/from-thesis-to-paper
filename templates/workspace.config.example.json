@@ -1,25 +1,44 @@
 {
-  "workspaceName": "paperepn-evrp-example",
-  "repoRoot": "/Users/emilio/Desktop/PaperEPN/mi-investigacion-opt",
+  "workspaceName": "my-thesis-workspace",
+  "repoRoot": "/path/to/your-writable-project",
   "readOnlyRoots": [
-    "/Users/emilio/Desktop/PaperEPN/Thesis Code",
-    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/Models comparison_",
-    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/multigrafo",
-    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/inst_generation",
-    "/Users/emilio/Library/CloudStorage/OneDrive-EscuelaPolitecnicaNacional/1-Thesis/1 Thesis Code/Pilot1 - Spatio-Temporal EDA_-Emilio's MacBook Pro (2)"
+    "/path/to/thesis-notebooks",
+    "/path/to/verification-data"
   ],
   "thesis": {
     "source": "local|overleaf|both",
-    "overleafProjectId": "TBD-24-char-hex-or-empty",
+    "overleafProjectId": "",
     "mainTexPath": "Capitulos/Resultados.tex"
   },
   "paper": {
     "dir": "paper",
-    "mainTex": "main.tex"
+    "mainTex": "main.tex",
+    "activeVenue": "primary",
+    "venueProfiles": {
+      "primary": {
+        "id": "user_defined_journal",
+        "mainTex": "main_journal.tex",
+        "guidelines": "paper/JOURNAL_GUIDELINES.md",
+        "build": "scripts/paper/build_primary.sh"
+      },
+      "alternate": {
+        "id": "user_defined_preprint",
+        "mainTex": "main_preprint.tex",
+        "guidelines": "paper/PREPRINT_GUIDELINES.md",
+        "build": "scripts/paper/build_preprint.sh"
+      }
+    }
   },
-  "packs": ["optimization-or"],
+  "packs": [],
   "evidence": {
     "catalog": "memory/thesis_experiment_catalog.md",
     "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  },
+  "hooks": {
+    "lineageBuild": "scripts/archaeology/build_log_lineage.py",
+    "tables": "scripts/paper/export_tables_from_catalog.py",
+    "evidence": "scripts/paper/build_evidence_bundle.py",
+    "figures": "scripts/paper/generate_figures.py",
+    "compile": "scripts/paper/build_primary.sh"
   }
 }

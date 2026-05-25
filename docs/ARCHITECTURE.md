@@ -200,7 +200,8 @@ sequenceDiagram
 |-------------|-----|-----------|
 | Overleaf MCP (thesis read-only, paper separate) | `docs/MCP_OVERLEAF_OPTIONAL.md` (P8), PaperEPN `OVERLEAF_MCP_SETUP.md` | No |
 | Gurobi CLI / gurobipy | optimization-or pack | Only for MIP workflows |
-| Shelby / other MCP | user `.cursor/mcp.json` | No |
+| ShelbyMCP (graph memory) | `~/.cursor/mcp.json` or project `.cursor/mcp.json`; Claude user-scope MCP | No — see [`MCP_SHELBY_OPTIONAL.md`](MCP_SHELBY_OPTIONAL.md) |
+| Other MCP | user config | No |
 
 **Forbidden:** GurobiMCP; writing to thesis Overleaf from SA12 (paper project only).
 

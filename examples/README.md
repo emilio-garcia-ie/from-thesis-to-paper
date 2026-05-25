@@ -22,6 +22,18 @@ Do not add PaperEPN as a submodule or copy verification trees into `examples/`.
 
 Schema matches [`templates/workspace.config.example.json`](../templates/workspace.config.example.json). Required keys: `workspaceName`, `repoRoot`, `paper.dir`, `paper.mainTex`.
 
+Optional blocks:
+
+| Block | Purpose |
+|-------|---------|
+| `hooks` | Relative paths under `repoRoot` for `fttp tables|evidence|figures|compile` and `fttp lineage build` |
+| `paper.venueProfiles` + `paper.activeVenue` | User-defined venues (multiple `mainTex` / build scripts — not hardcoded to one publisher) |
+| `evidence.catalog`, `evidence.lineageCsv` | Table export and `fttp lineage validate` defaults |
+
+Example hooks + venues: [`paperepn-external.config.json`](paperepn-external.config.json).
+
+PaperEPN-specific writer skill: [`paperepn/REFERENCE_skills/scientific-writing-paper.md`](paperepn/REFERENCE_skills/scientific-writing-paper.md) (not in `skills/core/`).
+
 ## How to use
 
 1. Copy `sample-workspace.config.json` (or adapt `paperepn-external.config.json`) to your **writable** project root as `fttp.config.json` or `workspace.config.json`.

@@ -1,4 +1,4 @@
-"""Orchestrate tables → evidence → figures → compile (minimal stub)."""
+"""Orchestrate tables → evidence → figures → compile via hooks."""
 
 from __future__ import annotations
 
@@ -36,5 +36,5 @@ def run_pipeline(cfg: dict[str, Any] | None = None) -> int:
             )
             return code
 
-    print("fttp pipeline: all stub steps completed")
+    print("fttp pipeline: all steps completed")
     return 0

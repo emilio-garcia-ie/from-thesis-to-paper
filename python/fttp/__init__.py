@@ -1,4 +1,4 @@
-"""from-thesis-to-paper (fttp) — config loading and paper pipeline CLI stubs."""
+"""from-thesis-to-paper (fttp) — config, hooks CLI, and generic evidence helpers."""
 
 from fttp.config import FttpConfigError, load_config, resolve_config_path
 

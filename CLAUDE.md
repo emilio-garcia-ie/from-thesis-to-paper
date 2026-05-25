@@ -136,9 +136,13 @@ Overleaf MCP is **optional**. Claude does **not** require `.cursor/mcp.json`.
 - **Thesis project:** read-only archaeology; numeric authority = catalog + signed brief, not Overleaf alone.
 - **Paper:** edit and build local `paper/`; optional SA12 sync to a separate paper project.
 
-## Shelby MCP (optional — Claude only)
+## Shelby MCP (optional — Cursor + Claude)
 
-**ShelbyMCP** (graph + persistent memory) is optional and typically configured in `.claude/settings.local.json`. Not used in Cursor. See `memory/agent_stack.md`.
+**ShelbyMCP** (graph + cross-session memory) is optional on **both** stacks. Same local graph when both use user-scope registration on one machine.
+
+- **Claude Code:** `npx shelbymcp setup claude-code --forage`; workspace `.claude/settings.local.json` for `mcp__shelbymcp__*` if needed
+- **Cursor:** `npx shelbymcp setup cursor --forage` — does **not** require reading `AGENTS.md`; uses `~/.cursor/mcp.json` or project `.cursor/mcp.json`
+- **Authority:** `memory/thesis_experiment_catalog.md` and signed brief win over Shelby for numeric cells — see [`docs/MCP_SHELBY_OPTIONAL.md`](docs/MCP_SHELBY_OPTIONAL.md) and `memory/agent_stack.md`
 
 ## Domain skills (`.claude/skills/`)
 

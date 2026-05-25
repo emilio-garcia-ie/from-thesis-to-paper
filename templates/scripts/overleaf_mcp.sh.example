@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Example launcher for Overleaf MCP — copy to your workspace as scripts/overleaf_mcp.sh
+# Load credentials from .env (never commit secrets).
+
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$ROOT"
+
+if [[ -f "${ROOT}/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "${ROOT}/.env"
+  set +a
+fi
+
+exec npx -y overleaf-mcp "$@"

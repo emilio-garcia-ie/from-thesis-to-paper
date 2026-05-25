@@ -105,6 +105,14 @@ Playbook: `.cursor/plans/thesis_to_golden_archaeology.plan.md`
 - **Read-only** on thesis Overleaf for table/value archaeology; edit `paper/` locally
 - **Do not** commit `.env` or Overleaf passwords
 
+## Shelby MCP (optional — Cursor + Claude)
+
+**ShelbyMCP** (graph + cross-session memory) is optional on **both** stacks. Complements git-tracked `memory/`; does not replace catalog or signed brief for numbers.
+
+- **Cursor:** `npx shelbymcp setup cursor --forage` (or manual `~/.cursor/mcp.json` / project `.cursor/mcp.json`) — see [`docs/MCP_SHELBY_OPTIONAL.md`](docs/MCP_SHELBY_OPTIONAL.md)
+- **Claude Code:** `npx shelbymcp setup claude-code --forage`; workspace `.claude/settings.local.json` for `mcp__shelbymcp__*` permissions
+- **Stack table:** `memory/agent_stack.md` (user workspace)
+
 ## Domain skills (`.cursor/skills/`)
 
 **Core (always available):** `agent-intake`, `narrative-interview`, `terminology-glossary`, `evidence-archaeologist`, `evidence-join-auditor`, `paper-strategy`, `scientific-writing`, `paper-figures-latex`, `reproducibility-release`, `overleaf-sync-optional`, `venue-submission-policy`, `submission-clerk` — canonical text under `skills/core/`.

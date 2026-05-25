@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "overleaf": {
+      "command": "bash",
+      "args": ["scripts/overleaf_mcp.sh"],
+      "env": {}
+    }
+  }
+}

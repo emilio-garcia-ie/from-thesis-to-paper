@@ -1,0 +1,4 @@
+id,termination,objective_log,lineage_status
+T001,OPTIMAL,10.5,CONFIRMED
+T002,UNKNOWN,,TBD
+T003,INFEASIBLE,,CONFIRMED

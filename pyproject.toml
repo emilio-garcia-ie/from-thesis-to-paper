@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fttp"
 version = "0.1.0"
-description = "from-thesis-to-paper: config and paper pipeline CLI stubs"
+description = "from-thesis-to-paper: config, hooks CLI, and generic evidence helpers"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

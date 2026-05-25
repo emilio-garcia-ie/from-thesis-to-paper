@@ -1,5 +1,5 @@
 {
-  "_note": "Illustrative PaperEPN layout only. Replace all /path/to/... placeholders. Do not commit real paths or secrets.",
+  "_note": "Illustrative consumer layout. Copy to your workspace as fttp.config.json; replace all /path/to/... placeholders. Do not commit real paths or secrets.",
   "workspaceName": "paperepn-external-case-study",
   "repoRoot": "/path/to/mi-investigacion-opt",
   "readOnlyRoots": [
@@ -15,11 +15,33 @@
   },
   "paper": {
     "dir": "paper",
-    "mainTex": "main.tex"
+    "mainTex": "main.tex",
+    "activeVenue": "primary",
+    "venueProfiles": {
+      "primary": {
+        "id": "user_defined_journal",
+        "mainTex": "main_journal.tex",
+        "guidelines": "paper/JOURNAL_GUIDELINES.md",
+        "build": "scripts/paper/build_primary.sh"
+      },
+      "ieee_access": {
+        "id": "user_defined_ieee_access",
+        "mainTex": "main_ieee_access.tex",
+        "guidelines": "paper/IEEE_ACCESS_GUIDELINES.md",
+        "build": "scripts/paper/build_ieee_access.sh"
+      }
+    }
   },
   "packs": ["optimization-or"],
   "evidence": {
     "catalog": "memory/thesis_experiment_catalog.md",
     "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  },
+  "hooks": {
+    "lineageBuild": "scripts/archaeology/build_log_lineage.py",
+    "tables": "scripts/paper/export_tables_from_catalog.py",
+    "evidence": "scripts/paper/build_evidence_bundle.py",
+    "figures": "scripts/paper/generate_figures.py",
+    "compile": "scripts/paper/build_primary.sh"
   }
 }

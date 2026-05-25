@@ -76,6 +76,7 @@ Numeric cells in the submission paper must follow the signed strategy brief and 
 
 | Doc | Purpose |
 |-----|---------|
+| [`docs/MCP_SHELBY_OPTIONAL.md`](MCP_SHELBY_OPTIONAL.md) | Optional graph memory (Cursor + Claude) |
 | [`docs/OVERLEAF_MCP_SETUP.md`](OVERLEAF_MCP_SETUP.md) | Install Playwright, first login, MCP tools, verify |
 | [`memory/overleaf_thesis_project.md`](../memory/overleaf_thesis_project.md) | Thesis project id, chapter paths, table labels |
 | [`AGENTS.md`](../AGENTS.md) | Workspace Overleaf policy (read-only thesis) |

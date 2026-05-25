@@ -1,33 +1,35 @@
 # PaperEPN workspace ↔ fttp framework split
 
-> **Canonical framework repo:** [`/Users/emilio/Desktop/PaperE.`](.)  
-> **This repo (`mi-investigacion-opt`):** PaperEPN **user workspace** — paper, memory, experiments, archaeology scripts.
+> **Canonical framework repo:** [`from-thesis-to-paper`](../README.md) (sibling folder under `PaperEPN/`)  
+> **Consumer workspace:** `mi-investigacion-opt` — paper, memory, experiments, archaeology scripts (not shipped in fttp).
 
-## Two repos (option 2)
+## Two repos
 
-| Repo | Path | Contains |
-|------|------|----------|
-| **from-thesis-to-paper** | `.` | `python/fttp`, CLI, skills, templates, examples, orchestration plans |
-| **mi-investigacion-opt** | this directory | `paper/`, `memory/`, `codigo/`, `experimentos/`, PaperEPN `scripts/` |
+| Repo | Typical path | Contains |
+|------|--------------|----------|
+| **from-thesis-to-paper** | `Desktop/PaperEPN/from-thesis-to-paper` | `python/fttp`, CLI, skills, templates, examples, orchestration plans |
+| **mi-investigacion-opt** | `Desktop/PaperEPN/mi-investigacion-opt` | `paper/`, `memory/`, `codigo/`, `experimentos/`, consumer `scripts/` |
 
-The framework was initially built inside `mi-investigacion-opt` (B1–B12). It was **extracted** to a sibling folder for open-source publication.
+The framework was extracted from an early monorepo layout. **Framework changes belong only in `from-thesis-to-paper`.**
 
-## Using the external framework from this workspace
+## Using the framework from PaperEPN (manual, post-merge)
 
 ```bash
-# Install Python package from sibling repo
-pip install -e .
+pip install -e /path/to/from-thesis-to-paper
 
-# Doctor (from workspace root)
-cd /Users/emilio/Desktop/PaperEPN/mi-investigacion-opt
-FTTP_CONFIG=fttp.config.json node ./packages/cli/src/cli.js doctor
+cd /path/to/mi-investigacion-opt
+cp /path/to/from-thesis-to-paper/examples/paperepn-external.config.json fttp.config.json
+# Edit repoRoot and hooks paths to match your machine
+
+FTTP_CONFIG=fttp.config.json python -m fttp doctor
+./scripts/run_tests.sh smoke   # consumer tier (e.g. 18/18 when fully configured)
 ```
 
-Create `fttp.config.json` here via **SA0 CONSUMER_ONBOARD** (see `docs/creacion-de-agentes.md` in the framework repo).
+See [`examples/README.md`](../examples/README.md) and [`docs/ONBOARDING.md`](ONBOARDING.md).
 
-## Duplicate copies in this repo
+## Duplicate copies in the consumer repo
 
-Until you remove them, `mi-investigacion-opt` may still contain **copies** of framework paths (`python/fttp/`, `packages/`, `skills/`, `templates/`). Treat **`from-thesis-to-paper` as source of truth** for framework changes; this workspace keeps PaperEPN-specific tests and scripts.
+Until removed, `mi-investigacion-opt` may still contain **legacy copies** of `python/fttp/`, `skills/`, or `templates/`. Treat **`from-thesis-to-paper` as source of truth** for framework code; the workspace keeps PaperEPN-specific tests and scripts.
 
 ## Cursor multi-root (recommended)
 
@@ -36,8 +38,9 @@ Add both folders to the Cursor workspace:
 1. `from-thesis-to-paper` — `REPO_FTTP`
 2. `mi-investigacion-opt` — `REPO_WORKSPACE`
 
-Prompts: set `REPO_FTTP` to the framework path above.
+Orchestration prompts: set `REPO_FTTP` to the framework path; writable edits for paper/memory go to `REPO_WORKSPACE`.
 
-## Legacy path note
+## Related
 
-Older docs mention `/Users/emil.` (home directory). The extracted repo lives under **PaperEPN**: `Desktop/PaperE.`.
+- [`examples/paperepn-external.config.json`](../examples/paperepn-external.config.json) — illustrative config with `hooks` and `venueProfiles`
+- [`docs/PAPER_PRODUCTION_PIPELINE.md`](PAPER_PRODUCTION_PIPELINE.md) — hooks-first pipeline contract
