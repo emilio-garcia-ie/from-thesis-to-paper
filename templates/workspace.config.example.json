@@ -1,6 +1,17 @@
 {
   "workspaceName": "my-thesis-workspace",
+  "workspaceSlug": "my-thesis-workspace",
   "repoRoot": "/path/to/your-writable-project",
+  "workflowProfile": "paper_audit",
+  "writingMode": "thesis_adapt",
+  "overleafPaper": {
+    "projectId": "",
+    "displayName": "my-thesis-workspace"
+  },
+  "copyPolicy": {
+    "maxArtifactMb": 500,
+    "allowSymlinks": false
+  },
   "readOnlyRoots": [
     "/path/to/thesis-notebooks",
     "/path/to/verification-data"
@@ -17,8 +28,13 @@
     "venueProfiles": {
       "primary": {
         "id": "user_defined_journal",
+        "displayName": "Journal full name",
+        "authorGuidelinesUrl": "https://example.com/journal/author-guidelines",
         "mainTex": "main_journal.tex",
         "guidelines": "paper/JOURNAL_GUIDELINES.md",
+        "templateSource": "local_path",
+        "templatePath": "paper/latex/vendor/",
+        "templateDeferred": false,
         "build": "scripts/paper/build_primary.sh"
       },
       "alternate": {

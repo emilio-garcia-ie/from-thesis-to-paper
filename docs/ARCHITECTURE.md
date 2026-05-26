@@ -101,34 +101,86 @@ Loaded from current working directory or path in environment variable `FTTP_CONF
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `workspaceName` | string | yes | Human label for logs and doctor output |
-| `repoRoot` | string (absolute path) | yes | Writable project root (memory, paper, experimentos) |
+| `workspaceSlug` | string | recommended | Canonical slug; should match Git folder and Overleaf **paper** project name (validator planned in P1) |
+| `repoRoot` | string (absolute path) | yes | Writable **paper workspace** root (memory, paper, experimentos) — not `REPO_FTTP` |
+| `workflowProfile` | enum | no (default `paper_audit`) | `paper_only` \| `paper_audit` \| `paper_audit_repro` \| `full_pipeline` — see §4.3 |
+| `writingMode` | enum | no (default `thesis_adapt`) | `compose` \| `thesis_adapt` \| `hybrid` — see §4.3 |
+| `overleafPaper` | object | no | `{ "projectId": "", "displayName": "same as workspaceSlug" }` — manuscript project only |
+| `copyPolicy` | object | no | `{ "maxArtifactMb": 500, "allowSymlinks": false }` — evidence copy limits |
 | `readOnlyRoots` | string[] | no | Thesis code, verification trees, instance archives — **never written by agents** |
+| `thesis.source` | enum | no | `local` \| `overleaf` \| `both` |
 | `thesis.overleafProjectId` | string | no | 24-char Overleaf id for **read-only** thesis archaeology |
 | `thesis.mainTexPath` | string | no | Relative path to key chapter under thesis project |
 | `paper.dir` | string | yes | Paper subtree (default `paper`) |
 | `paper.mainTex` | string | yes | Entry TeX file (default `main.tex`) |
+| `paper.activeVenue` | string | no | Key into `paper.venueProfiles` (e.g. `primary`) |
+| `paper.venueProfiles` | object | no | Per-venue `mainTex`, guidelines, `templateSource`, `templatePath`, `templateDeferred`, `build` — see [VENUE_TEMPLATE_ONBOARDING.md](VENUE_TEMPLATE_ONBOARDING.md) |
 | `packs` | string[] | no | Enabled skill packs, e.g. `["optimization-or"]` |
 | `evidence.catalog` | string | no | Relative path to experiment catalog markdown |
 | `evidence.lineageCsv` | string | no | Relative path to log lineage CSV |
+| `hooks` | object | no | Script paths for lineage, tables, evidence, figures, compile |
+
+> **Implementation note:** `workspaceSlug`, `workflowProfile`, `writingMode`, `overleafPaper`, and `copyPolicy` are specified in onboarding v2 (P1); validators land in `python/fttp/config.py`. Until then, add them manually to `fttp.config.json` in new workspaces.
+
+### 4.3 `workflowProfile` and `writingMode`
+
+| `workflowProfile` | Typical agents | Mandatory user approval gates |
+|-------------------|----------------|------------------------------|
+| `paper_only` | SA0–SA2, SA2b, SA7–SA9, SA12–SA13 | G0, G1, G2, G2b, G7, G8, G9 |
+| `paper_audit` | Above + SA3, SA4 | + G4 |
+| `paper_audit_repro` | Above + SA6 | + G6 |
+| `full_pipeline` | Above + SA5, SA11 (pack), refactor | All applicable gates + SA5 sign-off when `codigo/` changes |
+
+| `writingMode` | Behavior |
+|---------------|----------|
+| `thesis_adapt` | Extract → condense thesis prose; `memory/provenance_map.md`; no invented numbers |
+| `compose` | Draft more from brief/catalog; higher generic-tone risk |
+| `hybrid` | Section-level choice; provenance map required for adapted blocks |
+
+Gate details: [USER_APPROVAL_GATES.md](USER_APPROVAL_GATES.md). Rationale for SA0 blocks: [ONBOARDING_RATIONALE.md](ONBOARDING_RATIONALE.md). Three-repo layout: [WORKSPACE_MODEL.md](WORKSPACE_MODEL.md).
 
 ### 4.2 Example
 
 ```json
 {
-  "workspaceName": "paperepn-evrp",
-  "repoRoot": "/Users/emilio/Desktop/PaperEPN/mi-investigacion-opt",
+  "workspaceName": "evrp-sssmp-journal-2026",
+  "workspaceSlug": "evrp-sssmp-journal-2026",
+  "repoRoot": "/path/to/evrp-sssmp-journal-2026",
+  "workflowProfile": "paper_audit",
+  "writingMode": "thesis_adapt",
+  "overleafPaper": {
+    "projectId": "optional-24-hex-paper-only",
+    "displayName": "evrp-sssmp-journal-2026"
+  },
+  "copyPolicy": {
+    "maxArtifactMb": 500,
+    "allowSymlinks": false
+  },
   "readOnlyRoots": [
-    "/Users/emilio/Desktop/PaperEPN/Thesis Code",
-    "/Users/emilio/Library/CloudStorage/OneDrive-.../Models comparison_",
-    "/Users/emilio/Library/CloudStorage/OneDrive-.../multigrafo"
+    "/path/to/thesis-notebooks",
+    "/path/to/verification-data-read-only"
   ],
   "thesis": {
-    "overleafProjectId": "optional-24-hex",
+    "source": "both",
+    "overleafProjectId": "optional-24-hex-thesis-read-only",
     "mainTexPath": "Capitulos/Resultados.tex"
   },
   "paper": {
     "dir": "paper",
-    "mainTex": "main.tex"
+    "mainTex": "main.tex",
+    "activeVenue": "primary",
+    "venueProfiles": {
+      "primary": {
+        "id": "journal_slug",
+        "displayName": "Journal full name",
+        "authorGuidelinesUrl": "https://...",
+        "mainTex": "main_journal.tex",
+        "templateSource": "local_path",
+        "templatePath": "paper/latex/vendor/",
+        "templateDeferred": false,
+        "build": "scripts/paper/build_primary.sh"
+      }
+    }
   },
   "packs": ["optimization-or"],
   "evidence": {
@@ -137,6 +189,8 @@ Loaded from current working directory or path in environment variable `FTTP_CONF
   }
 }
 ```
+
+Legacy single-repo example (PaperEPN): [WORKSPACE_EXAMPLE_PAPEREPN.md](WORKSPACE_EXAMPLE_PAPEREPN.md) — new articles should prefer a dedicated paper workspace per [WORKSPACE_MODEL.md](WORKSPACE_MODEL.md).
 
 User copies `templates/workspace.config.example.json` on first setup (P4). **Do not commit** real `fttp.config.json` if it contains secrets; use `.env` for Overleaf credentials (see `docs/OVERLEAF_MCP_SETUP.md`).
 
@@ -219,7 +273,10 @@ sequenceDiagram
 
 ## Related docs
 
-- [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md) — phase index, stop-on-fail, closure protocol
+- [`ONBOARDING.md`](ONBOARDING.md) — install, SA0, doctor, RUN
+- [`WORKSPACE_MODEL.md`](WORKSPACE_MODEL.md) — three-repo model and slug rule
+- [`USER_APPROVAL_GATES.md`](USER_APPROVAL_GATES.md) — G0–G13 approval matrix
+- [`EXECUTOR_GUIDE.md`](EXECUTOR_GUIDE.md) — phase index, stop-on-fail, closure protocol, WHY-before-ASK
 - [`PAPER_PRODUCTION_PIPELINE.md`](PAPER_PRODUCTION_PIPELINE.md) — CLI command matrix
 - [`PORTFOLIO.md`](PORTFOLIO.md) — product scope and audience
 

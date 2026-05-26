@@ -160,8 +160,8 @@ on-demand: SA10 → SA11 | SA12 ~> after SA9 | SA13 ~> before submit
 
 | # | Prompt | Topología | Lanzar cuando | Paralelo con |
 |---|--------|-----------|---------------|--------------|
-| **SA0** | Onboard / intake | → | Usuario final tras **install**; o SA0-SMOKE mantenedor | — |
-| **SA1** | Venue policy | → | SA0 **CONSUMER_ONBOARD** ✓ | — |
+| **SA0** | Onboard / intake v2 (blocks 0–G, G0-intake) | → | Usuario final tras **install**; or SA0-SMOKE maintainer | — |
+| **SA1** | Venue policy | → | SA0 **CONSUMER_ONBOARD** ✓ + **G0-intake approved** | — |
 | **SA2** | Narrative interview | → | SA1 ✓ | — |
 | **SA2b** | Terminology | → | SA2 ✓ | — |
 | **SA3** | Archaeologist | ∥ | SA2b ✓ | **SA3b** (si pack OR) |
@@ -577,82 +577,13 @@ CIERRE DE TAREA
 
 ## Subagent prompts — TRACK B RUN
 
-### Prompt SA0 — Workspace onboarding (intake) | TOPOLOGÍA: secuencial
+### Prompt SA0 — Workspace onboarding (intake) v2 | TOPOLOGÍA: secuencial
 
-```text
-PLAN: from-thesis-to-paper RUN | SUBAGENTE SA0 | TOPOLOGÍA: secuencial
-REPO_FTTP: <framework clone path — npm package or git clone>
-REPO_WORKSPACE: <user writable project path>
-MODO: CONSUMER_ONBOARD | FRAMEWORK_SMOKE
-PRECONDICIÓN: B12 BUILD complete OR framework installed via npm/npx; REPO_WORKSPACE exists
-ESPERA A: none (RUN start for consumer; optional maintainer smoke after B12)
-SKILL: skills/core/agent-intake.md
+> **Canonical copy-paste block (CONSUMER v2, blocks 0–G, G0-intake, dual-stack MCP):**  
+> [`.cursor/plans/from-thesis-to-paper_orchestration.plan.md`](../.cursor/plans/from-thesis-to-paper_orchestration.plan.md) — section **### Prompt SA0 — Workspace onboarding (intake) v2**.  
+> Skill: [`skills/core/agent-intake.md`](../skills/core/agent-intake.md) · Rationale: [`docs/ONBOARDING_RATIONALE.md`](ONBOARDING_RATIONALE.md) · Gates: [`docs/USER_APPROVAL_GATES.md`](USER_APPROVAL_GATES.md)
 
-ROL: Onboard a workspace — copy fttp templates, write fttp.config.json + intake_report.md, run doctor.
-Primary product path (document in HANDOFF): npx from-thesis-to-paper init (when CLI ships) asks the same questions as CONSUMER_ONBOARD.
-
-─── MODO: CONSUMER_ONBOARD (default — end user installing fttp) ───
-WHO: Graduate student / researcher adopting the open-source tool on THEIR machine.
-ASK USER — do not skip; goal is **thesis → journal paper** in writable `paper/`:
-
-A. **Workspace & paper (writable)**
-1. Confirm REPO_WORKSPACE absolute path (`repoRoot`)?
-2. **Paper output:** directory for the journal manuscript (default `paper/`) and main file (default `main.tex`)? Create dirs if missing.
-   → `fttp.config.json` → `paper.dir`, `paper.mainTex`
-
-B. **Thesis ground truth (read-only)**
-3. **Thesis source:** `local` (disk) \| `overleaf` \| `both`?
-4. If **local:** absolute path to thesis notebooks / thesis tree → `readOnlyRoots[]`
-5. If **overleaf** or **both:** Overleaf **thesis** project id — tell user:
-   - Browser URL: `https://www.overleaf.com/project/<24-char-hex>` — copy only the hex after `/project/`
-   - Guide: `REPO_FTTP/docs/OVERLEAF_PROJECT_ID.md`
-6. If **overleaf** or **both:** Overleaf MCP setup (required for Overleaf thesis):
-   - Docs: `REPO_WORKSPACE/docs/OVERLEAF_MCP_SETUP.md` or framework `docs/MCP_OVERLEAF_OPTIONAL.md`
-   - ASK: Overleaf **email** + **password** → write ONLY to `REPO_WORKSPACE/.env` (gitignored); record `set in .env` in intake_report, **never** commit or echo password in report
-   - Install: `overleaf-mcp`, Playwright chromium, `scripts/overleaf_mcp.sh` + `.cursor/mcp.json` if Cursor
-   - First login: `overleaf_login`, `overleaf_list_projects`; create `memory/overleaf_thesis_project.md`
-
-C. **Experiments & niche**
-7. Other READ-ONLY roots — verification, multigraph, inst_generation (optional; no multi-GB copy)?
-8. Pack `optimization-or` (yes/no)?
-9. Chat language (es/en)?
-
-TAREAS (CONSUMER):
-1. Copy REPO_FTTP/templates/memory/* → REPO_WORKSPACE/memory/ if missing
-2. Ensure `paper/` (or chosen `paper.dir`) exists; add minimal `main.tex` stub only if user OK and missing
-3. Copy `templates/workspace.config.example.json` → `fttp.config.json` — repoRoot, paper.*, readOnlyRoots[], packs, thesis.source, thesis.overleafProjectId
-4. Write `memory/intake_report.md` from `intake_report_TEMPLATE.md` — all answers; no TBD on paper/thesis paths
-5. If Overleaf: `.env` + MCP verify; copy `docs/OVERLEAF_PROJECT_ID.md` to workspace if missing
-6. cd REPO_WORKSPACE && npx from-thesis-to-paper doctor (or node REPO_FTTP/packages/cli/src/cli.js doctor)
-
-─── MODO: FRAMEWORK_SMOKE (maintainer only — post B12, not PaperEPN thesis data) ───
-WHO: Framework author validating templates; NOT collecting a real user's thesis paths.
-DO NOT ask the nine consumer questions (paper, thesis, Overleaf, MCP).
-TAREAS (SMOKE):
-1. In REPO_FTTP or empty test dir: copy templates/memory/* if missing
-2. fttp.config.json from example with placeholder paths (/path/to/...) and packs: []
-3. intake_report.md with section "Consumer onboarding — pending" and TBD on user answers
-4. doctor exit 0 (warn on missing readOnlyRoots acceptable)
-
-VERIFICACIÓN TESTS (both modes):
-  doctor: mandatory — exit 0
-  If REPO_WORKSPACE/tests/ OR REPO_WORKSPACE/scripts/run_tests.sh exists:
-    cd REPO_WORKSPACE && ./scripts/run_tests.sh smoke
-  Else: note "no tests yet — smoke skipped" in intake_report.md
-
-PROHIBIDO: Write under readOnlyRoots; copy 57GB logs into workspace; hardcode PaperEPN OneDrive paths in framework repo
-
-EJECUTA:
-doctor exit 0; smoke if tests/ present
-
----
-CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA0) if intake_report.md + fttp.config.json + doctor OK (+ smoke OK or explicitly skipped)
-  CONSUMER: paper.dir/mainTex set; thesis.source set; readOnlyRoots and/or Overleaf id + MCP (.env) if applicable; packs and lang recorded
-  SMOKE: explicit "consumer onboarding pending" in intake_report.md
-- HANDOFF: CONSUMER → SA1 (→) | SMOKE → none required; publish framework
-- TAREA INCOMPLETA — BLOQUEADO: SA1–SA13 (CONSUMER mode only)
-```
+**Summary:** New paper repo (`templates/paper-workspace/`), blocks 0–G with **WHY → ASK → YOU_DO**, `workflowProfile` + `writingMode`, venue stub → `paper/latex/`, init `memory/user_approval_log.md`, **AUDIT: G0-intake** + user `APPROVED: G0-intake` before HANDOFF → SA1. **BLOQUEADO: SA1–SA13** without G0 approved.
 
 ---
 

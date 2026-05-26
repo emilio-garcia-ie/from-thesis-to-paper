@@ -24,9 +24,13 @@ Discovery and paths for the thesis project live in [`memory/overleaf_thesis_proj
 
 **Not in scope:** Prism or any Prism–Overleaf integration. Do not add, document, or require Prism for PaperEPN / fttp.
 
-## MCP registration pattern (describe, do not commit secrets)
+## Cursor vs Claude Code (choose one)
 
-When enabled, Cursor reads `.cursor/mcp.json` at the workspace root. A typical pattern (paths may differ on your machine):
+### Cursor setup (project MCP: `.cursor/mcp.json` + launcher script)
+
+Use this when you want Overleaf MCP available **inside Cursor** as a registered MCP server.
+
+When enabled, Cursor reads `.cursor/mcp.json` at the workspace root and runs the launcher. A typical pattern (paths may differ on your machine):
 
 ```json
 {
@@ -49,6 +53,18 @@ Optional env vars (see setup doc):
 - `OVERLEAF_EMAIL`, `OVERLEAF_PASSWORD` — login (free tier OK)
 - `OVERLEAF_THESIS_PROJECT_ID` — thesis project hex id after `overleaf_list_projects`
 - `OVERLEAF_MCP_BIN` — override binary path if needed
+
+### Claude Code setup (terminal MCP: `npx overleaf-mcp`)
+
+Use this when you want to run Overleaf MCP **from a terminal** (Claude Code does not require `.cursor/mcp.json`).
+
+From the repo root (or any folder), run:
+
+```bash
+npx overleaf-mcp
+```
+
+Then configure credentials and project ids via your local **gitignored** `.env` (same variable names as above). See [`docs/OVERLEAF_MCP_SETUP.md`](OVERLEAF_MCP_SETUP.md) for install/login verification and the tool list.
 
 ## Agent rules (thesis vs paper)
 

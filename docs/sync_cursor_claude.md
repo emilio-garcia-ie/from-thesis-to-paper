@@ -74,27 +74,27 @@ flowchart TB
 
 ### 1 — Entry boundary
 
-- [ ] `AGENTS.md` states: Cursor must **not** cross-load `CLAUDE.md`
-- [ ] `CLAUDE.md` states: Claude must **not** cross-load `AGENTS.md`
-- [ ] Both link this file and `docs/EXECUTOR_GUIDE.md`
+- [x] `AGENTS.md` states: Cursor must **not** cross-load `CLAUDE.md`
+- [x] `CLAUDE.md` states: Claude must **not** cross-load `AGENTS.md`
+- [x] Both link this file and `docs/EXECUTOR_GUIDE.md`
 
 ### 2 — fttp framework pointers
 
-- [ ] Both list `docs/PACKS.md` and `optimization-or` when relevant
-- [ ] Both reference `from-thesis-to-paper_master.plan.md` and `from-thesis-to-paper_orchestration.plan.md`
-- [ ] `examples/README.md` unchanged or cross-checked if config schema moved
+- [x] Both list `docs/PACKS.md` and `optimization-or` when relevant
+- [x] Both reference `from-thesis-to-paper_master.plan.md` and `from-thesis-to-paper_orchestration.plan.md`
+- [x] `examples/README.md` unchanged or cross-checked if config schema moved
 
 ### 3 — Workspace map
 
-- [ ] Six-folder table identical in `AGENTS.md` and `CLAUDE.md`
-- [ ] READ-ONLY roots named the same way
-- [ ] No invented paths in entry files (detail → `memory/workspace_inventory.md`)
+- [x] Three-repo table identical in `AGENTS.md` and `CLAUDE.md` (`REPO_FTTP` / `repoRoot` / `readOnlyRoots`)
+- [x] READ-ONLY policy stated consistently (thesis + verification roots remain external)
+- [x] `workspaceSlug` convention documented and consistent
 
 ### 4 — Phases and guardrails
 
-- [ ] Phases 1–5 (or SA pipeline) aligned
-- [ ] Token protection, max-3-steps, read-only rule — same intent
-- [ ] `./scripts/run_tests.sh smoke` documented in both
+- [x] Phases 1–5 (or SA pipeline) aligned
+- [x] Token protection, max-3-steps, read-only rule — same intent
+- [x] `./scripts/run_tests.sh smoke` documented in both
 
 ### 5 — On-demand memory list
 
@@ -122,9 +122,9 @@ Both entry files must cite the same `memory/` files:
 
 ### 8 — Overleaf
 
-- [ ] Cursor: `.cursor/mcp.json` + `docs/OVERLEAF_MCP_SETUP.md` or `docs/MCP_OVERLEAF_OPTIONAL.md` (optional)
-- [ ] Claude: `npx overleaf-mcp` / terminal — **not** requiring `.cursor/mcp.json`
-- [ ] Thesis read-only; local `paper/` canonical for submission
+- [x] Cursor: `.cursor/mcp.json` + `docs/OVERLEAF_MCP_SETUP.md` or `docs/MCP_OVERLEAF_OPTIONAL.md` (optional)
+- [x] Claude: `npx overleaf-mcp` / terminal — **not** requiring `.cursor/mcp.json`
+- [x] Thesis read-only; local `paper/` canonical for submission
 
 ### 9 — Shelby (optional — both stacks)
 
@@ -173,5 +173,6 @@ cd mi-investigacion-opt && ./scripts/run_tests.sh smoke
 |------|--------|-----|
 | 2026-05-24 | P10: entry boundary, packs, EXECUTOR_GUIDE, fttp plans; `docs/sync` canonical | B11 |
 | 2026-05-25 | ShelbyMCP parity: both stacks; `docs/MCP_SHELBY_OPTIONAL.md`; checklist §9 | Agent |
+| 2026-05-26 | Onboarding v2 parity: three-repo model, workspaceSlug, approval gates pointers; Overleaf doc split Cursor vs Claude | SA-Sync |
 
 _Update this table when you complete a sync._

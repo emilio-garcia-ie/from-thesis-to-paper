@@ -1,4 +1,4 @@
-# CLAUDE.md — PaperEPN / from-thesis-to-paper (Claude Code)
+# CLAUDE.md — from-thesis-to-paper framework (Claude Code)
 
 > **Claude Code entry only.** Cursor uses [`AGENTS.md`](AGENTS.md) — same phases and guardrails, **do not cross-load** (see [`docs/sync_cursor_claude.md`](docs/sync_cursor_claude.md)).
 
@@ -19,7 +19,14 @@ Postdoctoral researcher in mathematical optimization (EVRP, terrain-aware logist
 
 ## from-thesis-to-paper (fttp)
 
-This repository hosts the **fttp** framework (`python/fttp/`, `skills/core/`, `examples/`) and the PaperEPN reference workspace.
+This repository hosts the **fttp** framework (`python/fttp/`, `skills/core/`, `examples/`). The **paper workspace** is a separate repo/folder you create and own. Thesis sources and historical run artifacts remain **read-only external roots**.
+
+**Onboarding v2 (start here):**
+
+- End-user onboarding: [`docs/ONBOARDING.md`](docs/ONBOARDING.md)
+- Model overview (paper workspace / three-repo model): [`docs/WORKSPACE_MODEL.md`](docs/WORKSPACE_MODEL.md)
+- WHY-before-ASK: [`docs/ONBOARDING_RATIONALE.md`](docs/ONBOARDING_RATIONALE.md)
+- Approval protocol and gates: [`docs/USER_APPROVAL_GATES.md`](docs/USER_APPROVAL_GATES.md)
 
 | Topic | Doc |
 |-------|-----|
@@ -41,44 +48,24 @@ Core agents run **without** Gurobi. Enable in `workspace.config.json` / `fttp.co
 
 Canonical skills: `skills/core/` and `skills/packs/<pack>/`. Claude mirrors under `.claude/skills/` when present.
 
-## Project map (single source of truth)
+## Paper workspace model (three-repo)
 
-**GOLDEN RULE:** Historical folders are **STRICTLY READ-ONLY**. Never modify them.
+The recommended topology is:
 
-### Active environment (writable)
+| Repo / root | Role | Edit? |
+|-------------|------|-------|
+| `REPO_FTTP` (this repo) | Framework code, docs, skills, tests | **Yes** (maintainers) |
+| `repoRoot` (paper workspace) | Manuscript + evidence snapshots + agent memory | **Yes** |
+| `readOnlyRoots` (external) | Thesis sources, notebooks, verification trees, thesis Overleaf | **READ-ONLY** |
 
-* `mi-investigacion-opt/`: current workspace root.
-  * `codigo/` — refactored modular `.py` scripts.
-  * `experimentos/` — validated results (JSON/Excel summaries).
-  * `paper/` — journal manuscript `.tex`.
-  * `memory/` — thesis/paper memory (shared with Cursor).
-  * `memoria_hallazgos/` — discrepancy logs and technical debt (PaperEPN).
-
-### Historical and raw data (read-only)
-
-* `Thesis Code/` — master notebooks (formulation ground truth).
-* OneDrive `Models comparison_/` (~57 GB) — Chapter 4 verification.
-* OneDrive `multigrafo/` — Chapter 5 verification.
-* OneDrive `inst_generation/` — GIS instance scripts.
-* OneDrive `Pilot1 …` — EDA pilot.
-
-## Workspace (6 folders)
-
-| Folder | Role | Edit? |
-|--------|------|-------|
-| `mi-investigacion-opt/` | Active repo | **Yes** |
-| `Thesis Code/` | Master notebooks | **READ-ONLY** |
-| OneDrive `Models comparison_/` | Cap. 4 verification | **READ-ONLY** |
-| OneDrive `multigrafo/` | Cap. 5 verification | **READ-ONLY** |
-| OneDrive `inst_generation/` | Instances | **READ-ONLY** |
-| OneDrive `Pilot1 …` | EDA pilot | **READ-ONLY** |
+**`workspaceSlug` convention:** `repoRoot` folder name (and recommended Overleaf **paper** project name) should match a short `workspaceSlug` configured in `fttp.config.json`. Rationale and approval gates: [`docs/ONBOARDING_RATIONALE.md`](docs/ONBOARDING_RATIONALE.md), [`docs/USER_APPROVAL_GATES.md`](docs/USER_APPROVAL_GATES.md).
 
 ## Mandatory execution flow (phases)
 
 ### Phase 1 — Mathematical audit (thesis vs code)
 
 1. Compare thesis equations to master notebooks. **Code wins.**
-2. Document corrections in `memoria_hallazgos/math_corrections.md` (or `memory/` as appropriate).
+2. Document corrections in your paper workspace under `memory/` (e.g. `memory/math_corrections.md`).
 
 ### Phase 2 — Data archaeology (token protection)
 
@@ -97,7 +84,7 @@ Draft and polish `paper/` using signed `memory/paper_strategy_brief.md`. English
 
 ### Phase 5 — Future algorithms (post-submission only)
 
-Document proposals in `memoria_hallazgos/future_algorithms.md` — column generation, search memory, GIS generalization.
+Document proposals in your paper workspace under `memory/` (e.g. `memory/future_algorithms.md`) — column generation, search memory, GIS generalization.
 
 ## Plans and subagents
 
@@ -129,12 +116,16 @@ For multi-step work, follow [`.cursor/rules/plan-and-subagent-orchestration.mdc`
 
 ## Overleaf (optional — Claude)
 
-Overleaf MCP is **optional**. Claude does **not** require `.cursor/mcp.json`.
+Overleaf is **optional**. Policies must remain consistent across Cursor and Claude:
 
-- Install/run via npm: `npx overleaf-mcp` (see [`docs/OVERLEAF_MCP_SETUP.md`](docs/OVERLEAF_MCP_SETUP.md) and [`docs/MCP_OVERLEAF_OPTIONAL.md`](docs/MCP_OVERLEAF_OPTIONAL.md)).
-- Load credentials from gitignored `.env` locally — never commit secrets.
-- **Thesis project:** read-only archaeology; numeric authority = catalog + signed brief, not Overleaf alone.
-- **Paper:** edit and build local `paper/`; optional SA12 sync to a separate paper project.
+- Thesis Overleaf project: **read-only archaeology** (agents may read/list/compile for checks; do not edit thesis sources unless the user explicitly requests it).
+- Paper Overleaf project: **optional** sync target (SA12) for the submission manuscript only; local `paper/` remains canonical by default.
+
+Setup depends on stack:
+
+- Cursor: `.cursor/mcp.json` + `scripts/overleaf_mcp.sh` (loads gitignored `.env`) — see [`docs/OVERLEAF_MCP_SETUP.md`](docs/OVERLEAF_MCP_SETUP.md)
+- Claude Code: run `npx overleaf-mcp` in a terminal (no `.cursor/mcp.json` required)
+- Details and security rules: [`docs/MCP_OVERLEAF_OPTIONAL.md`](docs/MCP_OVERLEAF_OPTIONAL.md)
 
 ## Shelby MCP (optional — Cursor + Claude)
 
@@ -152,7 +143,7 @@ Mirror of Cursor skills when synced. **Core:** SA0–SA13 paths under `skills/co
 
 * **Specify and approve:** Max 3 logical steps without summary/approval — **except** when the user approved a written plan with explicit subagent sequence.
 * **Token protection:** Never dump large files; prefer Excel summaries and catalog rows.
-* **Mentor the user:** Explain *why* for engineering choices in `memoria_hallazgos/` or `memory/`.
+* **Mentor the user:** Explain *why* for engineering choices in `memory/`.
 * **Translation (on demand):** Follow `.cursor/rules/translation.mdc` and `docs/TRANSLATION_GUIDE.md`. **Default targets:** infra paths in the guide’s *Infra in scope* table (`memory/agent_stack.md`, `docs/sync_cursor_claude.md`, `.cursor-state.md`, master playbook `.cursor/plans/thesis_to_golden_archaeology.plan.md`); **banner-only** for `memory/thesis_*.md`. Do not translate `paper/main.tex` unless explicitly requested (use scientific-writing skill).
 
 ## Tests

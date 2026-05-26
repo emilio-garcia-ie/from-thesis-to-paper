@@ -22,12 +22,42 @@ description: SA7 paper strategist — signed brief, narrative arc, evidence_path
 1. Run decision checklist (record in brief):
    - `narrative_arc` (default `thesis_mirror`).
    - `evidence_path`: `recompute_A` | `thesis_only_B` | `hybrid_B_plus`.
+   - **`writing_mode`**: `thesis_adapt` | `compose` | `hybrid` — copy from `fttp.config.json` `writingMode` unless user overrides in SA0; SA8 prose and provenance rules depend on this field.
    - Cap.4 / Cap.5 table scope (full vs summary rows).
    - `t002_policy` and other named discrepancy policies.
 2. List `forbidden_claims` copied from SA2 plus any new from SA4.
-3. Require `approved_by: user` and date before marking brief **signed**.
-4. Write `memory/paper_strategy_brief.md` using template sections from `templates/memory/`.
-5. If user wants `recompute_A` but Gurobi missing → **TAREA INCOMPLETA** or downgrade path with user OK.
+3. Align claims with **G2-narrative** and **G4-evidence** (when profile requires G4): no strategy that hides `TBD`/`DISCREPANCY` rows.
+4. Require `approved_by: user` and date before marking brief **signed** (agent draft ≠ user sign-off).
+5. Write `memory/paper_strategy_brief.md` using template sections from `templates/memory/`.
+6. If user wants `recompute_A` but Gurobi missing → **TAREA INCOMPLETA** or downgrade path with user OK.
+7. Issue **G7-strategy** AUDIT / APPROVE before any HANDOFF to SA8 (below).
+
+## G7-strategy — AUDIT / APPROVE (mandatory)
+
+Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md). **Blocks SA8** until approved in `memory/user_approval_log.md`.
+
+After the brief is written and internally consistent:
+
+```text
+AUDIT: G7-strategy — review memory/paper_strategy_brief.md
+Checklist:
+- evidence_path and allowed tables explicit
+- writing_mode recorded (thesis_adapt | compose | hybrid)
+- narrative_arc and forbidden_claims align with G2-narrative
+- Discrepancy / TBD policies align with G4-evidence when profile includes G4
+APPROVE_ASK: Confirm strategy before prose writing. Reply APPROVED: G7-strategy (EN) or APROBADO: G7-strategy (ES) or corrections.
+```
+
+On user approval: update row **`G7-strategy`** in `memory/user_approval_log.md` — `user_status`, `approved_at` (ISO-8601), `artifact_paths`, `notes`.
+
+**Without approval:**
+
+```text
+TAREA INCOMPLETA
+BLOQUEADO: no lanzar SA8 — missing approved row for G7-strategy
+```
+
+Do not HANDOFF to SA8 based on agent-only `approved_by` in the brief YAML — the log row is the gate.
 
 ## Forbidden
 
@@ -37,5 +67,6 @@ description: SA7 paper strategist — signed brief, narrative arc, evidence_path
 
 ## Verify
 
-- Brief contains signed `evidence_path` and `narrative_arc`.
-- HANDOFF → SA8 (writer) and SA9 (figures) after brief signed; SA13 only after SA9 per fast path.
+- Brief contains signed `evidence_path`, `narrative_arc`, and **`writing_mode`**.
+- `memory/user_approval_log.md` has **G7-strategy** `approved` (or `approved_with_edits`).
+- HANDOFF → SA8 (writer) **only after G7-strategy approved**; SA9 (figures) may plan in parallel but must not publish table numbers contradicting the signed brief; SA13 only after SA9 per fast path.

@@ -10,11 +10,14 @@ from typing import Any
 from fttp.config import (
     FttpConfigError,
     KNOWN_HOOKS,
+    doctor_workspace_checks,
     hook_path,
     load_config,
     paper_dir,
     repo_root,
     resolve_active_main_tex,
+    workflow_profile,
+    writing_mode,
 )
 
 
@@ -65,12 +68,22 @@ def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
 
     root = repo_root(cfg)
     issues: list[str] = []
+    warnings: list[str] = []
     print(f"fttp doctor: workspace={cfg.get('workspaceName')}")
+    slug = cfg.get("workspaceSlug")
+    if slug:
+        print(f"  workspaceSlug: {slug}")
+    print(f"  workflowProfile: {workflow_profile(cfg)}")
+    print(f"  writingMode: {writing_mode(cfg)}")
     print(f"  config: {cfg.get('_configPath')}")
     print(f"  repoRoot: {root}")
 
     if not root.is_dir():
         issues.append(f"repoRoot does not exist: {root}")
+
+    doc_errors, doc_warnings = doctor_workspace_checks(cfg)
+    issues.extend(doc_errors)
+    warnings.extend(doc_warnings)
 
     pdir = paper_dir(cfg)
     if not pdir.is_dir():
@@ -110,13 +123,23 @@ def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
     if packs:
         print(f"  packs: {', '.join(packs)}")
 
+    overleaf = cfg.get("overleafPaper") or {}
+    if isinstance(overleaf, dict) and overleaf.get("projectId"):
+        print(f"  overleafPaper.projectId: {overleaf.get('projectId')}")
+
+    for warn in warnings:
+        print(f"  WARNING: {warn}")
+
     if issues:
         print("fttp doctor: FAIL", file=sys.stderr)
         for item in issues:
             print(f"  - {item}", file=sys.stderr)
         return 1
 
-    print("fttp doctor: OK")
+    if warnings:
+        print("fttp doctor: OK (with warnings)")
+    else:
+        print("fttp doctor: OK")
     return 0
 
 

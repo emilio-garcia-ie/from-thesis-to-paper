@@ -225,8 +225,8 @@ on-demand: SA10 → SA11 | SA12 ~> after SA9 | SA13 ~> before submit
 | **SA3** | Archaeologist | ∥ | SA2b ✓ | **SA3b** (si pack OR) |
 | **SA3b** | Math audit | ∥ | SA2b ✓; solo si `optimization-or` | **SA3** |
 | **SA4** | Join auditor + **smoke gate** | → | SA3 ✓ y (SA3b ✓ o omitido) | — |
-| **SA7** | Strategist | → | SA4 ✓ | — |
-| **SA8** | Writer | → | SA7 ✓; brief firmado | — |
+| **SA7** | Strategist | → | SA4 ✓; **G1-venue** approved; `memory/venue_policy.md` | — |
+| **SA8** | Writer | → | SA7 ✓; **G7-strategy** + **G1-venue** approved; `venue_policy.md` | — |
 | **SA9** | Figures + LaTeX | → | SA8 ✓ (o secciones críticas listas) | — |
 | **SA5** | Refactor port | ~> | Tras SA4; opcional | no bloquea SA7 |
 | **SA6** | Repro release | ~> | Tras SA5 o SA4 | no bloquea SA7 |
@@ -635,81 +635,111 @@ CIERRE DE TAREA
 
 ## Subagent prompts — TRACK B RUN
 
-### Prompt SA0 — Workspace onboarding (intake) | TOPOLOGÍA: secuencial
+### Prompt SA0 — Workspace onboarding (intake) v2 | TOPOLOGÍA: secuencial
 
 ```text
-PLAN: from-thesis-to-paper RUN | SUBAGENTE SA0 | TOPOLOGÍA: secuencial
+PLAN: from-thesis-to-paper RUN | SUBAGENTE SA0 de 13 | TOPOLOGÍA: secuencial
 REPO_FTTP: <framework clone path — npm package or git clone>
-REPO_WORKSPACE: <user writable project path>
+REPO_WORKSPACE: <new paper workspace — NOT REPO_FTTP>
 MODO: CONSUMER_ONBOARD | FRAMEWORK_SMOKE
-PRECONDICIÓN: B12 BUILD complete OR framework installed via npm/npx; REPO_WORKSPACE exists
+PRECONDICIÓN: B12 BUILD complete OR framework installed via npm/npx
 ESPERA A: none (RUN start for consumer; optional maintainer smoke after B12)
 SKILL: skills/core/agent-intake.md
+LEE: docs/WORKSPACE_MODEL.md, docs/ONBOARDING_RATIONALE.md, docs/USER_APPROVAL_GATES.md, docs/VENUE_TEMPLATE_ONBOARDING.md
 
-ROL: Onboard a workspace — copy fttp templates, write fttp.config.json + intake_report.md, run doctor.
-Primary product path (document in HANDOFF): npx from-thesis-to-paper init (when CLI ships) asks the same questions as CONSUMER_ONBOARD.
+ROL: Guided onboarding v2 — new paper repo (three-repo model), blocks 0–G with WHY-before-ASK, G0-intake approval, then HANDOFF → SA1.
+Stack-neutral: Cursor **or** Claude Code (dual MCP paths). Primary scaffold: fttp scaffold or copy templates/paper-workspace/.
 
-─── MODO: CONSUMER_ONBOARD (default — end user installing fttp) ───
-WHO: Graduate student / researcher adopting the open-source tool on THEIR machine.
-ASK USER — do not skip; goal is **thesis → journal paper** in writable `paper/`:
+─── MODO: CONSUMER_ONBOARD (default) ───
+WHO: End user installing fttp for one journal article.
+RULE: Before each block emit WHY → ASK → YOU_DO (2–4 sentences WHY). Do not advance without answer or brief ok. Canonical text: REPO_FTTP/docs/ONBOARDING_RATIONALE.md.
 
-A. **Workspace & paper (writable)**
-1. Confirm REPO_WORKSPACE absolute path (`repoRoot`)?
-2. **Paper output:** directory for the journal manuscript (default `paper/`) and main file (default `main.tex`)? Create dirs if missing.
-   → `fttp.config.json` → `paper.dir`, `paper.mainTex`
+BLOCK 0 — Slug
+WHY: Separates article from thesis; same name for Git folder + Overleaf paper project reduces SA12 sync errors.
+ASK: workspaceSlug (short name, lowercase recommended)?
+YOU_DO: Create new folder/repo with that name; plan empty Overleaf paper project same display name.
 
-B. **Thesis ground truth (read-only)**
-3. **Thesis source:** `local` (disk) \| `overleaf` \| `both`?
-4. If **local:** absolute path to thesis notebooks / thesis tree → `readOnlyRoots[]`
-5. If **overleaf** or **both:** Overleaf **thesis** project id — tell user:
-   - Browser URL: `https://www.overleaf.com/project/<24-char-hex>` — copy only the hex after `/project/`
-   - Guide: `REPO_FTTP/docs/OVERLEAF_PROJECT_ID.md`
-6. If **overleaf** or **both:** Overleaf MCP setup (required for Overleaf thesis):
-   - Docs: `REPO_WORKSPACE/docs/OVERLEAF_MCP_SETUP.md` or framework `docs/MCP_OVERLEAF_OPTIONAL.md`
-   - ASK: Overleaf **email** + **password** → write ONLY to `REPO_WORKSPACE/.env` (gitignored); record `set in .env` in intake_report, **never** commit or echo password in report
-   - Install: `overleaf-mcp`, Playwright chromium, `scripts/overleaf_mcp.sh` + `.cursor/mcp.json` if Cursor
-   - First login: `overleaf_login`, `overleaf_list_projects`; create `memory/overleaf_thesis_project.md`
+BLOCK A — New paper workspace
+WHY: Framework never stores thesis; need one writable PAPER_WS for manuscript + memory + evidence.
+ASK: Absolute path to new repo root (or parent + slug to create now)?
+YOU_DO: git init if desired; never use REPO_FTTP as repoRoot.
+AGENT: Copy REPO_FTTP/templates/paper-workspace/ → PAPER_WS; templates/memory/* → memory/; init memory/user_approval_log.md from user_approval_log_TEMPLATE.md.
 
-C. **Experiments & niche**
-7. Other READ-ONLY roots — verification, multigraph, inst_generation (optional; no multi-GB copy)?
-8. Pack `optimization-or` (yes/no)?
-9. Chat language (es/en)?
+BLOCK B — Thesis read-only
+WHY: Thesis and original runs are ground truth; agents read/copy subsets only — never edit RO trees.
+ASK: Local path(s), cloud mount, NAS, and/or Overleaf thesis project id? Optional extra RO roots (logs, verification)?
+YOU_DO: Confirm agents must not modify those locations.
+AGENT: thesis.source, readOnlyRoots[], thesis.overleafProjectId; memory/overleaf_thesis_project.md if Overleaf thesis.
 
-TAREAS (CONSUMER):
-1. Copy REPO_FTTP/templates/memory/* → REPO_WORKSPACE/memory/ if missing
-2. Ensure `paper/` (or chosen `paper.dir`) exists; add minimal `main.tex` stub only if user OK and missing
-3. Copy `templates/workspace.config.example.json` → `fttp.config.json` — repoRoot, paper.*, readOnlyRoots[], packs, thesis.source, thesis.overleafProjectId
-4. Write `memory/intake_report.md` from `intake_report_TEMPLATE.md` — all answers; no TBD on paper/thesis paths
-5. If Overleaf: `.env` + MCP verify; copy `docs/OVERLEAF_PROJECT_ID.md` to workspace if missing
-6. cd REPO_WORKSPACE && npx from-thesis-to-paper doctor (or node REPO_FTTP/packages/cli/src/cli.js doctor)
+BLOCK B2 — Overleaf paper + MCP (optional)
+WHY (paper): New Overleaf project = article only; thesis project untouched; SA12 syncs paper/ safely.
+ASK: Create Overleaf paper project named like slug; paste 24-char project id?
+YOU_DO: Create empty project at overleaf.com.
+WHY (MCP): Read thesis tables/text for thesis_adapt without manual PDF export.
+ASK: Enable MCP? Email/password → .env only?
+YOU_DO: Pick stack — Cursor: .cursor/mcp.json + scripts/overleaf_mcp.sh | Claude Code: npx overleaf-mcp per docs/MCP_OVERLEAF_OPTIONAL.md
+AGENT: overleafPaper.projectId + displayName; credentials: set in .env in intake_report only; memory/overleaf_paper_project.md.
 
-─── MODO: FRAMEWORK_SMOKE (maintainer only — post B12, not PaperEPN thesis data) ───
-WHO: Framework author validating templates; NOT collecting a real user's thesis paths.
-DO NOT ask the nine consumer questions (paper, thesis, Overleaf, MCP).
-TAREAS (SMOKE):
-1. In REPO_FTTP or empty test dir: copy templates/memory/* if missing
-2. fttp.config.json from example with placeholder paths (/path/to/...) and packs: []
-3. intake_report.md with section "Consumer onboarding — pending" and TBD on user answers
-4. doctor exit 0 (warn on missing readOnlyRoots acceptable)
+BLOCK C — Workflow profile
+WHY: Skip pipeline stages you will not use (refactor, public release, full MIP port).
+ASK: paper_only | paper_audit | paper_audit_repro | full_pipeline?
+YOU_DO: Note mandatory approval gates for profile — docs/USER_APPROVAL_GATES.md.
+AGENT: Set workflowProfile; tell user gate count (e.g. paper_audit adds G4-evidence).
+
+BLOCK D — Writing mode
+WHY: thesis_adapt preserves voice; compose risks generic tone; hybrid uses provenance_map.
+ASK: thesis_adapt | compose | hybrid (default: thesis_adapt)?
+YOU_DO: Confirm choice for SA8.
+AGENT: Set writingMode in fttp.config.json.
+
+BLOCK E — Environment
+WHY: Repro runs need Gurobi paths, data roots, tokens without guessing from notebooks.
+ASK: Review .env.example (scaffold or fttp env-suggest / RO requirements scan)?
+YOU_DO: Copy to .env, edit, never commit secrets.
+
+BLOCK F — Chat language
+WHY: Spanish chat OK while submission manuscript stays English.
+ASK: es or en for agent chat?
+YOU_DO: Reply preference; paper/ LaTeX remains English.
+
+BLOCK G — Venue stub (mandatory — no TBD on HANDOFF SA1)
+WHY: Journal defines class, page limits, references; without stub SA8 may not compile to acceptable PDF.
+ASK: Primary venue + author guidelines URL; template access (local_path | zip | download_url | overleaf_template_project_id); optional backup venue?
+YOU_DO: Copy YOUR template into paper/latex/<vendor>/; framework does NOT ship publisher .cls files.
+AGENT: paper.venueProfiles.primary; copy template if provided; memory/venue_template_manifest.md; stub paper/JOURNAL_GUIDELINES.md.
+Optional: pack optimization-or (yes/no) → packs[] — docs/PACKS.md.
+
+TAREAS (CONSUMER — after blocks 0–G):
+1. Write memory/intake_report.md from intake_report_TEMPLATE.md — all blocks; user_ack per block; no TBD on slug, repoRoot, thesis, venue, profile, writingMode
+2. Finalize fttp.config.json (workspaceSlug, repoRoot, workflowProfile, writingMode, overleafPaper, readOnlyRoots, thesis, paper.venueProfiles, packs)
+3. If Overleaf MCP: verify login; copy OVERLEAF setup doc-tag workspace if missing
+4. cd REPO_WORKSPACE && npx from-thesis-to-paper doctor — exit 0
+5. Optional: ./scripts/run_tests.sh smoke if scripts exist
+
+G0-intake — AUDIT + APPROVE (mandatory before HANDOFF):
+AUDIT: G0-intake — user reviews fttp.config.json, memory/intake_report.md, .env.example (no secrets in log), user_approval_log.md, venue stub, slug = folder + Overleaf paper name, no thesis paths inside paper repo
+APPROVE_ASK: You are final authority — confirm config matches your thesis layout and journal target. Reply APPROVED: G0-intake (EN) or APROBADO: G0-intake (ES) or corrections.
+On approval: update memory/user_approval_log.md row G0-intake — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA1
+
+─── MODO: FRAMEWORK_SMOKE (maintainer only) ───
+DO NOT ask blocks 0–G. Placeholder paths, packs: [], intake_report "Consumer onboarding — pending", skip G0. doctor exit 0. No HANDOFF SA1–SA13.
 
 VERIFICACIÓN TESTS (both modes):
-  doctor: mandatory — exit 0
-  If REPO_WORKSPACE/tests/ OR REPO_WORKSPACE/scripts/run_tests.sh exists:
-    cd REPO_WORKSPACE && ./scripts/run_tests.sh smoke
-  Else: note "no tests yet — smoke skipped" in intake_report.md
+  doctor: mandatory exit 0
+  If REPO_WORKSPACE/scripts/run_tests.sh exists: ./scripts/run_tests.sh smoke (note skip in intake_report if absent)
 
-PROHIBIDO: Write under readOnlyRoots; copy 57GB logs into workspace; hardcode PaperEPN OneDrive paths in framework repo
+PROHIBIDO: WHY-less question lists; Cursor-only MCP wording; write under readOnlyRoots; copy multi-GB trees; hardcode user OneDrive paths in framework; HANDOFF SA1 without G0-intake approved; ship publisher .cls in framework repo
 
 EJECUTA:
-doctor exit 0; smoke if tests/ present
+doctor exit 0; G0 approved (CONSUMER); smoke if present
 
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA0) if intake_report.md + fttp.config.json + doctor OK (+ smoke OK or explicitly skipped)
-  CONSUMER: paper.dir/mainTex set; thesis.source set; readOnlyRoots and/or Overleaf id + MCP (.env) if applicable; packs and lang recorded
-  SMOKE: explicit "consumer onboarding pending" in intake_report.md
-- HANDOFF: CONSUMER → SA1 (→) | SMOKE → none required; publish framework
-- TAREA INCOMPLETA — BLOQUEADO: SA1–SA13 (CONSUMER mode only)
+- SE TERMINÓ LA TAREA COMPLETA (SA0) if CONSUMER: blocks 0–G + intake_report + fttp.config.json + user_approval_log + doctor OK + G0-intake approved
+  SMOKE: consumer onboarding pending in intake_report; doctor OK
+- HANDOFF: CONSUMER → SA1 (venue policy from Block G stub) | SMOKE → none
+- TAREA INCOMPLETA — BLOQUEADO: SA1–SA13 (CONSUMER without G0-intake approved or incomplete intake)
 ```
 
 ---
@@ -719,27 +749,39 @@ CIERRE DE TAREA
 ```text
 PLAN: from-thesis-to-paper RUN | SUBAGENTE SA1 | TOPOLOGÍA: secuencial
 REPO_WORKSPACE: <path>
-PRECONDICIÓN: SA0 CONSUMER_ONBOARD ✓ — fttp.config.json filled by end user (not BUILD placeholders/TBD)
+PRECONDICIÓN: SA0 CONSUMER_ONBOARD ✓ — G0-intake approved in memory/user_approval_log.md; Block G venue stub (no TBD on primary); fttp.config.json filled by end user (not BUILD placeholders/TBD)
 ESPERA A: SA0
 SKILL: skills/core/venue-submission-policy.md
+DOCS: docs/VENUE_TEMPLATE_ONBOARDING.md, docs/USER_APPROVAL_GATES.md (gate_ids G0-intake, G1-venue)
+
+WHY (emit once to user at start):
+Journal rules and your copied LaTeX template must match before strategy and IMRaD writing — otherwise SA8 prose may not compile to an acceptable PDF. The framework does not ship publisher .cls files; you BYO into paper/latex/.
 
 PREGUNTAS OBLIGATORIAS:
-1. Primary journal + backup?
-2. APC budget yes/no?
-3. Target submission date?
-4. Public data/repo policy comfort level?
+1. Primary journal + optional backup venue?
+2. APC budget — yes / no / unknown?
+3. Target submission date (quarter or month)?
+4. Public data/code repository — comfort level (required / optional / decline)?
+5. Confirm BYO template files are under paper/latex/ (or explicit templateDeferred + date)?
 
 TAREAS:
-1. Web search official author guides (data, code, template, highlights)
-2. Write REPO_WORKSPACE/memory/venue_submission_policy.md (English, dated)
-3. Draft data/code availability requirements list for SA6/SA8
+1. Read memory/intake_report.md Block G + memory/venue_template_manifest.md + paper.venueProfiles in fttp.config.json
+2. Verify user-copied template under templatePath; update manifest file list + documentclass match (no .cls in REPO_FTTP)
+3. Web search or read official author guidelines (limits, references, data/code, highlights)
+4. Write REPO_WORKSPACE/memory/venue_policy.md (English, dated) — canonical policy artifact
+5. Update paper/JOURNAL_GUIDELINES.md + memory/venue_template_manifest.md (SA1 completed)
+6. cd REPO_WORKSPACE && npx from-thesis-to-paper doctor — note exit code / venue warnings
+7. G1-venue — AUDIT then APPROVE_ASK; on user OK update memory/user_approval_log.md (gate_id G1-venue)
 
-PROHIBIDO: Edit paper/main.tex
+gate_ids: G0-intake (precondition), G1-venue (closure — blocks SA7, SA8 until approved)
+
+PROHIBIDO: Edit paper/main.tex body; ship publisher .cls/.bst in framework repo; HANDOFF SA7/SA8 without venue_policy.md + G1-venue approved
 
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA1) if venue_submission_policy.md exists
-- HANDOFF: SA2
+- SE TERMINÓ LA TAREA COMPLETA (SA1) if memory/venue_policy.md exists + venue_template_manifest updated + G1-venue approved in user_approval_log.md
+- HANDOFF: SA2 (narrative-interview) — payload: venue id, mainTex, template on disk yes/no, top 3 constraints
+- TAREA INCOMPLETA — BLOQUEADO: SA7, SA8 — missing venue_policy.md or G1-venue not approved
 ```
 
 ---
@@ -752,6 +794,11 @@ REPO_WORKSPACE: <path>
 PRECONDICIÓN: SA1 ✓; SA0 CONSUMER_ONBOARD ✓ (readOnlyRoots in fttp.config.json)
 ESPERA A: SA1
 SKILL: skills/core/narrative-interview.md
+
+WHY_THIS_STEP: The paper must tell one clear story before evidence mining or LaTeX. This step locks contribution, scope, and forbidden claims so later agents cannot drift into thesis-length narrative or unsupported claims.
+WHAT_I_NEED_FROM_USER: Answers to the five interview questions below; explicit OK on allowed/forbidden claims in the brief; confirmation of narrative_arc and out-of-scope thesis chapters.
+WHAT_I_WILL_NOT_TOUCH: readOnlyRoots and thesis sources (read-only); paper/main.tex and table numbers; REPO_FTTP framework repo; thesis Overleaf project (no writes).
+AUDIT_GATE: G2-narrative — memory/narrative_interview.md, memory/paper_strategy_brief.md (Decision table, forbidden claims). See docs/USER_APPROVAL_GATES.md. No HANDOFF until APPROVED: G2-narrative (or APROBADO: G2-narrative) logged in memory/user_approval_log.md.
 
 PREGUNTAS OBLIGATORIAS (author story):
 1. One-sentence contribution for a journal reader?
@@ -766,11 +813,17 @@ TAREAS:
 
 PROHIBIDO: Write LaTeX body; change table numbers
 
+G2-narrative — AUDIT + APPROVE (mandatory before HANDOFF):
+AUDIT: G2-narrative — user reviews memory/narrative_interview.md and memory/paper_strategy_brief.md (one-sentence contribution, forbidden_claims, narrative arc)
+APPROVE_ASK: You are final authority — confirm this reflects your thesis story for the journal. Reply APPROVED: G2-narrative (EN) or APROBADO: G2-narrative (ES) or corrections.
+On approval: update memory/user_approval_log.md row G2-narrative — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA2b
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA2) if paper_strategy_brief.md signed by user OK
-- HANDOFF: SA2b
-- TAREA INCOMPLETA if user did not approve brief — BLOQUEADO: SA2b until OK
+- SE TERMINÓ LA TAREA COMPLETA (SA2) if narrative_interview.md + paper_strategy_brief.md exist AND user_approval_log.md has G2-narrative status approved
+- HANDOFF: SA2b (only after G2-narrative approved)
+- TAREA INCOMPLETA — BLOQUEADO: no lanzar SA2b — missing approved row for G2-narrative
 ```
 
 ---
@@ -784,6 +837,11 @@ PRECONDICIÓN: SA2 ✓ (brief approved)
 ESPERA A: SA2
 SKILL: skills/core/terminology-glossary.md
 
+WHY_THIS_STEP: Journal prose must use consistent English model names and terms. A user-confirmed glossary prevents SA8 from inventing translations or mixing Spanish thesis jargon with English IMRaD.
+WHAT_I_NEED_FROM_USER: Confirm/reject/add per proposed term (15–30); flag any domain jargon missing from thesis exports or Overleaf reads.
+WHAT_I_WILL_NOT_TOUCH: Full thesis catalog table cells; readOnlyRoots; paper/main.tex body; thesis Overleaf writes; bulk ES→EN translation of memory/thesis_* tables.
+AUDIT_GATE: G2b-glossary — memory/glossary_thesis_en.md. See docs/USER_APPROVAL_GATES.md. No HANDOFF until APPROVED: G2b-glossary logged in memory/user_approval_log.md.
+
 TAREAS:
 1. Extract 15–30 key terms from thesis (Overleaf read OR memory/thesis sources)
 2. Propose English equivalents; ASK USER confirm/reject/add per term
@@ -792,11 +850,18 @@ TAREAS:
 
 PROHIBIDO: Translate full thesis catalog table cells
 
+G2b-glossary — AUDIT + APPROVE (mandatory before HANDOFF):
+AUDIT: G2b-glossary — user reviews memory/glossary_thesis_en.md (model names, EN terms, missing jargon)
+APPROVE_ASK: Confirm English terminology matches your thesis and target journal. Reply APPROVED: G2b-glossary (EN) or APROBADO: G2b-glossary (ES) or corrections.
+On approval: update memory/user_approval_log.md row G2b-glossary — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA3 / SA3b
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA2b) if glossary_thesis_en.md has user-confirmed terms
-- HANDOFF: Launch SA3 AND SA3b (if optimization-or) in parallel
+- SE TERMINÓ LA TAREA COMPLETA (SA2b) if glossary_thesis_en.md has user-confirmed terms AND user_approval_log.md has G2b-glossary status approved
+- HANDOFF: Launch SA3 AND SA3b (if optimization-or) in parallel — only after G2b-glossary approved
 - LISTO PARA PARALELO: SA3; SA3b only if packs includes optimization-or
+- TAREA INCOMPLETA — BLOQUEADO: no lanzar SA3 — missing approved row for G2b-glossary
 ```
 
 ---
@@ -810,6 +875,11 @@ PRECONDICIÓN: SA2b ✓; use readOnlyRoots from fttp.config.json (no writes ther
 ESPERA A: SA2b (gate shared with SA3b)
 PARALELO CON: SA3b (if enabled) — do not edit math_audit files
 SKILL: skills/core/evidence-archaeologist.md
+
+WHY_THIS_STEP: Experiments live in scattered notebooks, logs, and run folders. Archaeology maps artifacts to catalog rows without inventing numbers — SA4 triangulation depends on this inventory.
+WHAT_I_NEED_FROM_USER: Optional pointers to twin notebooks or run folders if not obvious from fttp.config.json readOnlyRoots; confirm artifact naming when ambiguous.
+WHAT_I_WILL_NOT_TOUCH: All readOnlyRoots (no writes); paper/tables numeric cells; memory/math_audit_report.md (SA3b scope); thesis Overleaf writes.
+AUDIT_GATE: none — preparatory read-only work; mandatory user gate is G4-evidence in SA4 (docs/USER_APPROVAL_GATES.md). Document outputs in memory/ only.
 
 TAREAS:
 1. Read memory/thesis_experiment_run_artifacts.md or templates equivalent
@@ -866,6 +936,11 @@ PRECONDICIÓN: SA3 ✓ AND (SA3b ✓ or waived)
 ESPERA A: SA3, SA3b
 SKILL: skills/core/evidence-join-auditor.md
 
+WHY_THIS_STEP: Paper tables need a single numeric authority. Triangulation marks CONFIRMED/DISCREPANCY/TBD so SA7 and SA8 never silently pick favorable log or thesis values.
+WHAT_I_NEED_FROM_USER: Agreement on catalog vs log authority where discrepancies exist; explicit LOCKED command only if overriding golden objectives.
+WHAT_I_WILL_NOT_TOUCH: readOnlyRoots originals; LOCKED golden objectives without user LOCKED; inventing objective values.
+AUDIT_GATE: G4-evidence — memory/thesis_experiment_catalog.md, memory/discrepancy_registry.md, memory/join_audit_report.md, experimentos/evidence/* if present. Mandatory for workflowProfile paper_audit+ (see docs/USER_APPROVAL_GATES.md). No HANDOFF SA7 until APPROVED: G4-evidence when profile requires G4.
+
 TAREAS:
 1. Triangulate thesis tables vs catalog vs logs (3-layer model)
 2. Mark CONFIRMED / DISCREPANCY / TBD per row policy in brief
@@ -879,12 +954,18 @@ VERIFICACIÓN TESTS (gate before SA7 — mandatory if codigo/ or tests/ exists):
 
 PROHIBIDO: Change LOCKED golden objectives without user LOCKED command
 
+G4-evidence — AUDIT + APPROVE (mandatory when profile includes G4):
+AUDIT: G4-evidence — user reviews catalog, discrepancy_registry, join_audit_report; TBD/DISCREPANCY visible; numeric authority agreed
+APPROVE_ASK: Confirm evidence join reflects your runs and thesis tables. Reply APPROVED: G4-evidence (EN) or APROBADO: G4-evidence (ES) or corrections.
+On approval: update memory/user_approval_log.md row G4-evidence — user_status approved, approved_at ISO-8601
+Without approval (when G4 mandatory): TAREA INCOMPLETA — BLOQUEADO: no lanzar SA7
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA4) if join_audit_report.md + gate PASS for tables + smoke PASS (or no codigo/tests to run)
-- HANDOFF: SA7 (strategist) — may skip SA5/SA6 async
+- SE TERMINÓ LA TAREA COMPLETA (SA4) if join_audit_report.md + smoke PASS (or no codigo/tests) AND (G4-evidence approved when profile requires G4, or profile paper_only with G4 waived noted in log)
+- HANDOFF: SA7 (strategist) — may skip SA5/SA6 async; only after G4 approved when mandatory
 - LISTO PARA OPCIONAL: SA5 ~> refactor port | SA6 ~> repro
-- TAREA INCOMPLETA — BLOQUEADO: SA7, SA8
+- TAREA INCOMPLETA — BLOQUEADO: SA7, SA8 — missing approved row for G4-evidence (when required) or smoke FAIL
 ```
 
 ---
@@ -947,28 +1028,47 @@ PRECONDICIÓN: SA4 ✓
 ESPERA A: SA4
 SKILL: skills/core/paper-strategy.md
 
+WHY_THIS_STEP: The signed brief is the contract for SA8 writing — which tables, evidence paths, and claims are allowed. Without reconciliation with join audit, prose agents guess scope and violate forbidden claims.
+WHAT_I_NEED_FROM_USER: Explicit OK on reconciled brief; cap4/cap5 table policy confirmation; alignment with G2 narrative and G4 evidence (when run).
+WHAT_I_WILL_NOT_TOUCH: readOnlyRoots; numeric cells in paper/tables; thesis Overleaf writes; REPO_FTTP framework repo.
+AUDIT_GATE: G7-strategy — memory/paper_strategy_brief.md (signed, evidence_path, allowed tables). See docs/USER_APPROVAL_GATES.md. No HANDOFF until APPROVED: G7-strategy logged in memory/user_approval_log.md.
+
 TAREAS:
 1. Reconcile brief with join_audit_report.md
 2. Confirm cap4/cap5 table policy, forbidden claims, evidence_path
 3. User explicit OK on brief
 
+G7-strategy — AUDIT + APPROVE (mandatory before HANDOFF):
+AUDIT: G7-strategy — user reviews memory/paper_strategy_brief.md (evidence_path, allowed tables, writing_mode, claims vs G2/G4)
+APPROVE_ASK: Confirm strategy before prose writing. Reply APPROVED: G7-strategy (EN) or APROBADO: G7-strategy (ES) or corrections.
+On approval: update memory/user_approval_log.md row G7-strategy — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA8
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA7) if brief signed
-- HANDOFF: SA8
-- BLOQUEADO: SA8 without brief OK
+- SE TERMINÓ LA TAREA COMPLETA (SA7) if brief signed AND user_approval_log.md has G7-strategy status approved
+- HANDOFF: SA8 (only after G7-strategy approved)
+- TAREA INCOMPLETA — BLOQUEADO: no lanzar SA8 — missing approved row for G7-strategy
 ```
 
 ---
 
 ### Prompt SA8 — Scientific writer | TOPOLOGÍA: secuencial
 
+> **Orchestration note (onboarding v2):** SA8 **PRECONDICIÓN** includes **G7-strategy** and **G1-venue** approved in `memory/user_approval_log.md`, plus `memory/venue_policy.md` and venue template on disk (unless G1 audit accepted bounded `templateDeferred`). See [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md).
+
 ```text
 PLAN: from-thesis-to-paper RUN | SUBAGENTE SA8 | TOPOLOGÍA: secuencial
 REPO_WORKSPACE: <path>
-PRECONDICIÓN: SA7 ✓; glossary_thesis_en.md exists
+PRECONDICIÓN: SA7 ✓; memory/paper_strategy_brief.md signed (G7-strategy approved); memory/venue_policy.md exists (G1-venue approved); memory/glossary_thesis_en.md exists (G2b-glossary per workflowProfile)
 ESPERA A: SA7
 SKILL: skills/core/scientific-writing.md
+gate_ids (precondition): G1-venue, G7-strategy, G2b-glossary
+
+WHY_THIS_STEP: IMRaD prose turns approved strategy into submission English. One section per session keeps voice traceable and prevents bulk generic rewrite that drops thesis-specific contributions.
+WHAT_I_NEED_FROM_USER: Section scope for this session; review of section diff for G8; approval of thesis_adapt vs compose fragments if hybrid writingMode.
+WHAT_I_WILL_NOT_TOUCH: paper/tables/*.tex numeric cells; readOnlyRoots; Spanish thesis paragraphs pasted into paper/; thesis Overleaf writes.
+AUDIT_GATE: G8-prose — paper/main.tex section(s) and memory/provenance_map.md if thesis_adapt. See docs/USER_APPROVAL_GATES.md. No HANDOFF SA9 until APPROVED: G8-prose for agreed section batch (or note partial multi-session in log).
 
 TAREAS:
 1. One section per session — English only in paper/main.tex
@@ -978,11 +1078,19 @@ TAREAS:
 
 PROHIBIDO: Paste Spanish thesis paragraphs; cite defended thesis in bib
 
+G8-prose — AUDIT + APPROVE (mandatory before HANDOFF SA9):
+AUDIT: G8-prose — user reviews paper/main.tex section(s) or summary diff; provenance_map if thesis_adapt; no forbidden claims
+APPROVE_ASK: Confirm prose reflects your voice and brief. Reply APPROVED: G8-prose (EN) or APROBADO: G8-prose (ES) or corrections.
+On approval: update memory/user_approval_log.md row G8-prose — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA9
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA8) per section scope agreed with user
-- HANDOFF: SA9 when all sections drafted OR SA10 if user wants review first
+- SE TERMINÓ LA TAREA COMPLETA (SA8) per section scope AND user_approval_log.md has G8-prose status approved for batch
+- HANDOFF: SA9 when all sections drafted AND G8-prose approved — OR SA10 if user wants review first
 - LISTO PARA OPCIONAL: SA10 on-demand
+- TAREA INCOMPLETA — BLOQUEADO: no lanzar SA9 — missing approved row for G8-prose
+- TAREA INCOMPLETA — BLOQUEADO: no lanzar SA8 — missing G7-strategy or G1-venue approved or memory/venue_policy.md
 ```
 
 ---
@@ -996,6 +1104,11 @@ PRECONDICIÓN: SA8 ✓ (critical sections)
 ESPERA A: SA8
 SKILL: skills/core/paper-figures-latex.md
 
+WHY_THIS_STEP: Figures and table fragments must compile and match evidence-backed numbers. Build verification catches label drift, missing inputs, and venue resolution issues before Overleaf sync or submission.
+WHAT_I_NEED_FROM_USER: Confirm which tables to export; review PDF/build output for G9; flag any TBD cells that must stay visible.
+WHAT_I_WILL_NOT_TOUCH: readOnlyRoots; inventing table numbers not in catalog/join audit; thesis Overleaf project; REPO_FTTP framework.
+AUDIT_GATE: G9-figures — paper/tables/*.tex, paper/figures/*, main.pdf if built. See docs/USER_APPROVAL_GATES.md. No HANDOFF SA12/SA13 until APPROVED: G9-figures logged in memory/user_approval_log.md.
+
 TAREAS:
 1. npx from-thesis-to-paper tables export (if needed)
 2. npx from-thesis-to-paper figures
@@ -1006,11 +1119,18 @@ VERIFICACIÓN TESTS:
   LaTeX/PDF gate (not pytest): main.pdf builds without fatal errors
   Optional sanity: ./scripts/run_tests.sh smoke (do not block PDF on unrelated test fail — note in HANDOFF)
 
+G9-figures — AUDIT + APPROVE (mandatory before HANDOFF SA12/SA13):
+AUDIT: G9-figures — user reviews tables, figures, labels vs brief; numbers match evidence; PDF builds
+APPROVE_ASK: Confirm figures/tables ready for sync or submission. Reply APPROVED: G9-figures (EN) or APROBADO: G9-figures (ES) or corrections.
+On approval: update memory/user_approval_log.md row G9-figures — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA12 / SA13
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA9) if main.pdf builds
-- HANDOFF: SA12 optional; SA13 before submit; SA10 if review requested
+- SE TERMINÓ LA TAREA COMPLETA (SA9) if main.pdf builds AND user_approval_log.md has G9-figures status approved
+- HANDOFF: SA12 optional; SA13 before submit — only after G9-figures approved; SA10 if review requested
 - LISTO PARA OPCIONAL: SA12, SA10
+- TAREA INCOMPLETA — BLOQUEADO: missing approved row for G9-figures or PDF build fail
 ```
 
 ---
@@ -1022,6 +1142,11 @@ PLAN: from-thesis-to-paper RUN | SUBAGENTE SA10 | TOPOLOGÍA: on-demand
 REPO_WORKSPACE: <path>
 PRECONDICIÓN: User explicitly requested peer review; SA8 or SA9 has draft
 SKILL: skills/core/peer-review.md
+
+WHY_THIS_STEP: Structured peer review catches blockers before submission or after major edits. Findings route to SA8 (prose), SA11 (code), or SA4 (evidence) without silent file edits during review.
+WHAT_I_NEED_FROM_USER: Review mode (manuscript|evidence|OR_science|code_repro); scope (full paper vs section); whether to re-run smoke for code_repro mode.
+WHAT_I_WILL_NOT_TOUCH: All manuscript and code files during review (read-only); no fixes unless user launches SA11/SA8 separately.
+AUDIT_GATE: none mandatory — deliver memory/peer_review_YYYYMMDD.md; optional profile sign-off per docs/USER_APPROVAL_GATES.md. No downstream HANDOFF required; user decides follow-up SAs.
 
 MODOS (pick one): manuscript | evidence | OR_science | code_repro
 
@@ -1076,6 +1201,11 @@ REPO_WORKSPACE: <path>
 PRECONDICIÓN: User created separate Overleaf PAPER project; SA9 ✓
 ESPERA A: none for chain
 
+WHY_THIS_STEP: Optional Overleaf sync lets co-authors review compiled PDF while git remains canonical. Only the paper Overleaf project is touched — thesis Overleaf stays read-only per three-repo model.
+WHAT_I_NEED_FROM_USER: Paper Overleaf project id (24 chars, NEVER thesis id); push vs pull direction; review synced file list for G12.
+WHAT_I_WILL_NOT_TOUCH: Thesis Overleaf project (no overleaf_write); readOnlyRoots; canonical source remains REPO_WORKSPACE git local.
+AUDIT_GATE: G12-overleaf — memory/overleaf_sync_log.md, file list diff. See docs/USER_APPROVAL_GATES.md. No HANDOFF SA13 until APPROVED: G12-overleaf when sync performed.
+
 PREGUNTA OBLIGATORIA: Paper Overleaf project id? (NEVER thesis project id)
 
 TAREAS:
@@ -1085,9 +1215,17 @@ TAREAS:
 
 PROHIBIDO: overleaf_write on thesis project; canonical source stays git local
 
+G12-overleaf — AUDIT + APPROVE (mandatory when sync performed):
+AUDIT: G12-overleaf — user reviews memory/overleaf_sync_log.md; only paper/ synced; thesis RO untouched; direction agreed
+APPROVE_ASK: Confirm Overleaf paper project matches local git intent. Reply APPROVED: G12-overleaf (EN) or APROBADO: G12-overleaf (ES) or corrections.
+On approval: update memory/user_approval_log.md row G12-overleaf — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — BLOQUEADO: no lanzar SA13
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA12) or skip if no Overleaf
+- SE TERMINÓ LA TAREA COMPLETA (SA12) or skip if no Overleaf; if sync performed, user_approval_log.md must have G12-overleaf status approved
+- HANDOFF: SA13 optional — only after G12-overleaf approved when sync ran
+- TAREA INCOMPLETA — BLOQUEADO: missing approved row for G12-overleaf (when sync performed)
 ```
 
 ---
@@ -1100,6 +1238,11 @@ REPO_WORKSPACE: <path>
 PRECONDICIÓN: SA9 ✓; venue_submission_policy.md; user wants submit
 SKILL: skills/core/submission-clerk.md
 
+WHY_THIS_STEP: Portal submission has venue-specific checklist items (anonymization, page limits, SI, data/code policy). This clerk pass verifies compliance without clicking Submit for you.
+WHAT_I_NEED_FROM_USER: Final PDF review; waiver notes for Gurobi/integration tests if applicable; you perform portal upload yourself after G13 approval.
+WHAT_I_WILL_NOT_TOUCH: Portal submit button; readOnlyRoots; thesis sources; REPO_FTTP framework.
+AUDIT_GATE: G13-submit — memory/submission_checklist.md, final PDF. See docs/USER_APPROVAL_GATES.md. Pipeline end only after APPROVED: G13-submit logged in memory/user_approval_log.md.
+
 TAREAS:
 1. Checklist vs venue policy (template, highlights, cover letter, ORCID, SI)
 2. memory/submission_checklist.md PASS/FAIL per item
@@ -1109,10 +1252,17 @@ VERIFICACIÓN TESTS (checklist items):
   - [ ] ./scripts/run_tests.sh smoke — PASS (mandatory)
   - [ ] ./scripts/run_tests.sh all — PASS or waived if no Gurobi (optimization-or projects)
 
+G13-submit — AUDIT + APPROVE (mandatory — pipeline end):
+AUDIT: G13-submit — user reviews memory/submission_checklist.md and final PDF (anonymization, page limit, data/code policy)
+APPROVE_ASK: Confirm ready for portal upload. Reply APPROVED: G13-submit (EN) or APROBADO: G13-submit (ES) or corrections.
+On approval: update memory/user_approval_log.md row G13-submit — user_status approved, approved_at ISO-8601
+Without approval: TAREA INCOMPLETA — pipeline not complete
+
 ---
 CIERRE DE TAREA
-- SE TERMINÓ LA TAREA COMPLETA (SA13) when checklist complete including smoke PASS
-- HANDOFF: none — pipeline end
+- SE TERMINÓ LA TAREA COMPLETA (SA13) when checklist complete including smoke PASS AND user_approval_log.md has G13-submit status approved
+- HANDOFF: none — pipeline end (only after G13-submit approved)
+- TAREA INCOMPLETA — BLOQUEADO: missing approved row for G13-submit or checklist/smoke FAIL
 ```
 
 ---
@@ -1130,7 +1280,7 @@ CIERRE DE TAREA
 | SA3 ✓ (+ SA3b) | SA4 |
 | SA4 ✓ (incl. smoke gate) | SA7 (fast) or SA5~> then SA7 |
 | SA5 ✓ | Re-run smoke before SA6; SA7 if not started |
-| SA7 ✓ | SA8 |
+| SA7 ✓ (G7-strategy approved) | SA8 (requires G1-venue + venue_policy.md) |
 | SA8 ✓ | SA9 or SA10 (if review) |
 
 ---

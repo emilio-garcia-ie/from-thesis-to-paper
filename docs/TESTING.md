@@ -17,6 +17,17 @@ Use the project virtualenv when present (`.venv/bin/python`); otherwise `python3
 
 **Do not** expect **18/18** or PaperEPN archaeology tests to run in CI for the framework repo alone. Those tests live in the user workspace that owns `experimentos/`, hooks scripts, and catalog data.
 
+## Manual SA0 dry-run (recommended)
+
+When you change onboarding, entry files, or guardrails, do a manual **SA0** dry-run in a fresh agent session to confirm the user-facing flow did not regress.
+
+| Dry-run mode | Where | What you verify |
+|-------------|-------|-----------------|
+| **`FRAMEWORK_SMOKE`** | `REPO_FTTP` | No thesis paths requested; scaffolding/doctor paths are sane; framework smoke/unit still PASS |
+| **`CONSUMER_ONBOARD`** | A real paper workspace (`repoRoot`) | `workspaceSlug` + `repoRoot` + `readOnlyRoots` captured; gate **G0-intake** created; no cross-loading of entry files |
+
+The maintainer-only `FRAMEWORK_SMOKE` is the safe default when you do not have access to a consumer workspace. See [`docs/ONBOARDING.md`](ONBOARDING.md) § Maintainer-only.
+
 ## Framework tiers
 
 | Tier | Command | Gurobi needed? | Purpose |
@@ -28,12 +39,36 @@ Use the project virtualenv when present (`.venv/bin/python`); otherwise `python3
 
 ## Smoke composition (framework)
 
-1. `tests/test_config.py` — config resolution and JSON load (`@pytest.mark.smoke`)
+Framework smoke is **pytest marker selection**:
+
+```bash
+./scripts/run_tests.sh smoke    # runs: pytest tests/ -m smoke -q
+```
+
+As of 2026-05-25, the smoke suite includes these files (each contains at least one `@pytest.mark.smoke` test):
+
+1. `tests/test_config.py` — config resolution and JSON load
 2. `tests/test_hooks_schema.py` — optional `hooks` / `venueProfiles` validation
 3. `tests/test_run_hook.py` — subprocess hook delegation with fixture scripts
 4. `tests/test_venue_profiles.py` — `activeVenue` / `resolve_active_main_tex`
-5. `tests/test_evidence_*.py` — generic lineage CSV / Gurobi status map
-6. `tests/test_latex_gates_template.py` — optional, when `FTTP_MAIN_TEX` points at a manuscript
+5. `tests/test_scaffold.py` — scaffolded workspace structure + stub hooks
+6. `tests/test_doctor_extended.py` — doctor path checks (framework-only)
+7. `tests/test_workflow_profile.py` — workflowProfile → required gates behavior
+8. `tests/test_env_suggest.py` — env suggestion behavior (framework-only)
+9. `tests/test_venue_validate_cli.py` — venue validation CLI behavior
+10. `tests/test_venue_template.py` — venue template plumbing
+11. `tests/test_lineage_cli.py` — minimal CLI wiring for lineage
+12. `tests/test_evidence_csv_lineage.py` — generic lineage CSV validators
+13. `tests/test_evidence_gurobi_status.py` — Gurobi status mapping (no Gurobi required)
+14. `tests/test_latex_gates_template.py` — optional, when `FTTP_MAIN_TEX` points at a manuscript
+
+Note: `./scripts/run_tests.sh unit` runs the full test suite under `tests/` (includes all smoke tests).
+
+## Test fixtures
+
+Framework repo fixtures live under `tests/fixtures/`.
+
+- `tests/fixtures/minimal_workspace/`: a **post-scaffold snapshot** generated from the same code path as the product (`fttp.scaffold.scaffold_workspace`). It is intended for tests that need a small, realistic workspace tree without touching any external `readOnlyRoots`.
 
 ## Consumer smoke (external)
 
@@ -56,6 +91,24 @@ Framework changes must pass **framework** smoke/unit before release; consumer sm
 | SA9 | LaTeX compile (`fttp compile` or hook) | PDF/hook fail blocks |
 
 **Closure rule:** record exit code in HANDOFF. If exit ≠ 0 → **TAREA INCOMPLETA** (include last 30 lines of test output).
+
+## Green gate for Python changes (framework repo)
+
+Before HANDOFF for any change under `python/fttp/`, `tests/`, `scripts/`, or `docs/TESTING.md`:
+
+```bash
+./scripts/run_tests.sh smoke
+./scripts/run_tests.sh unit
+```
+
+Record **exit codes** in the closure. If either exit code ≠ 0, the work is **TAREA INCOMPLETA**.
+
+### Latest local run (framework)
+
+From `from-thesis-to-paper` repo root:
+
+- `./scripts/run_tests.sh smoke` → **55 passed**, exit code **0**
+- `./scripts/run_tests.sh unit` → **55 passed**, exit code **0**
 
 ## fttp CLI (after `pip install -e .`)
 

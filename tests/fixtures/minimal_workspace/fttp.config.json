@@ -1,0 +1,55 @@
+{
+  "_note": "SA0: replace minimal-ws and all /path/to/... placeholders. Never commit real secrets — use .env for Overleaf.",
+  "workspaceName": "minimal-ws",
+  "workspaceSlug": "minimal-ws",
+  "repoRoot": "/Users/emilio/Desktop/PaperEPN/from-thesis-to-paper/tests/fixtures/minimal-ws",
+  "workflowProfile": "paper_audit",
+  "writingMode": "thesis_adapt",
+  "overleafPaper": {
+    "projectId": "",
+    "displayName": "minimal-ws"
+  },
+  "copyPolicy": {
+    "maxArtifactMb": 500,
+    "allowSymlinks": false
+  },
+  "readOnlyRoots": [
+    "/path/to/thesis-notebooks",
+    "/path/to/verification-data"
+  ],
+  "thesis": {
+    "source": "local",
+    "overleafProjectId": "",
+    "mainTexPath": "Capitulos/Resultados.tex"
+  },
+  "paper": {
+    "dir": "paper",
+    "mainTex": "main.tex",
+    "activeVenue": "primary",
+    "venueProfiles": {
+      "primary": {
+        "id": "user_defined_journal",
+        "displayName": "TBD — journal full name (SA0/SA1)",
+        "authorGuidelinesUrl": "https://example.com/journal/author-guidelines",
+        "mainTex": "main.tex",
+        "guidelines": "paper/JOURNAL_GUIDELINES.md",
+        "templateSource": "local_path",
+        "templatePath": "paper/latex/",
+        "templateDeferred": true,
+        "build": "scripts/paper/build_primary.sh"
+      }
+    }
+  },
+  "packs": [],
+  "evidence": {
+    "catalog": "memory/thesis_experiment_catalog.md",
+    "lineageCsv": "experimentos/evidence/log_lineage.csv"
+  },
+  "hooks": {
+    "lineageBuild": "scripts/archaeology/build_log_lineage.py",
+    "tables": "scripts/paper/export_tables_from_catalog.py",
+    "evidence": "scripts/paper/build_evidence_bundle.py",
+    "figures": "scripts/paper/generate_figures.py",
+    "compile": "scripts/paper/build_primary.sh"
+  }
+}

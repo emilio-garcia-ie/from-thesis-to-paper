@@ -15,7 +15,16 @@
 
 ## from-thesis-to-paper (fttp)
 
-Standalone **fttp** framework repository. User workspaces (e.g. PaperEPN `mi-investigacion-opt`) are **external** — see [`examples/README.md`](examples/README.md) and [`examples/paperepn-external.config.json`](examples/paperepn-external.config.json).
+Standalone **fttp** framework repository. The **paper workspace** is a separate repo/folder you create and own. Thesis sources and historical run artifacts remain **read-only external roots**.
+
+**Onboarding v2 (start here):**
+
+- End-user onboarding: [`docs/ONBOARDING.md`](docs/ONBOARDING.md)
+- Model overview (paper workspace / three-repo model): [`docs/WORKSPACE_MODEL.md`](docs/WORKSPACE_MODEL.md)
+- WHY-before-ASK: [`docs/ONBOARDING_RATIONALE.md`](docs/ONBOARDING_RATIONALE.md)
+- Approval protocol and gates: [`docs/USER_APPROVAL_GATES.md`](docs/USER_APPROVAL_GATES.md)
+
+User workspaces (e.g. PaperEPN `mi-investigacion-opt`) are **external** — see [`examples/README.md`](examples/README.md) and [`examples/paperepn-external.config.json`](examples/paperepn-external.config.json).
 
 | Topic | Doc |
 |-------|-----|
@@ -37,16 +46,17 @@ Core agents run **without** Gurobi. Enable domain packs in `workspace.config.jso
 
 Canonical skills: `skills/core/` and `skills/packs/<pack>/`. Cursor mirrors under `.cursor/skills/` (including `packs/optimization-or/`).
 
-## Workspace (6 folders)
+## Paper workspace model (three-repo)
 
-| Folder | Role | Edit? |
-|--------|------|-------|
-| `mi-investigacion-opt/` | Active repo: `codigo/`, `paper/`, `memory/`, `scripts/` | **Yes** |
-| `Thesis Code/` | Master notebooks | **READ-ONLY** |
-| OneDrive `Models comparison_/` | Cap. 4 verification (~57 GB) | **READ-ONLY** |
-| OneDrive `multigrafo/` | Cap. 5 verification | **READ-ONLY** |
-| OneDrive `inst_generation/` | Instances | **READ-ONLY** |
-| OneDrive `Pilot1 …` | EDA pilot | **READ-ONLY** |
+The recommended topology is:
+
+| Repo / root | Role | Edit? |
+|-------------|------|-------|
+| `REPO_FTTP` (this repo) | Framework code, docs, skills, tests | **Yes** (maintainers) |
+| `repoRoot` (paper workspace) | Manuscript + evidence snapshots + agent memory | **Yes** |
+| `readOnlyRoots` (external) | Thesis sources, notebooks, verification trees, thesis Overleaf | **READ-ONLY** |
+
+**`workspaceSlug` convention:** `repoRoot` folder name (and recommended Overleaf **paper** project name) should match a short `workspaceSlug` configured in `fttp.config.json`. Rationale and approval gates: [`docs/ONBOARDING_RATIONALE.md`](docs/ONBOARDING_RATIONALE.md), [`docs/USER_APPROVAL_GATES.md`](docs/USER_APPROVAL_GATES.md).
 
 ## Phases (summary)
 
@@ -98,12 +108,16 @@ Playbook: `.cursor/plans/thesis_to_golden_archaeology.plan.md`
 
 ## Overleaf MCP (Cursor)
 
-- Config: `.cursor/mcp.json` → `scripts/overleaf_mcp.sh` (loads repo `.env`)
-- Setup: `docs/OVERLEAF_MCP_SETUP.md` — credentials, first login, thesis project id
-- Optional / not required: `docs/MCP_OVERLEAF_OPTIONAL.md`
-- Discovery file: `memory/overleaf_thesis_project.md`
-- **Read-only** on thesis Overleaf for table/value archaeology; edit `paper/` locally
-- **Do not** commit `.env` or Overleaf passwords
+Overleaf is **optional**. Policies must remain consistent across Cursor and Claude:
+
+- Thesis Overleaf project: **read-only archaeology** (agents may read/list/compile for checks; do not edit thesis sources unless the user explicitly requests it).
+- Paper Overleaf project: **optional** sync target (SA12) for the submission manuscript only; local `paper/` remains canonical by default.
+
+Setup depends on stack:
+
+- Cursor: `.cursor/mcp.json` + `scripts/overleaf_mcp.sh` (loads gitignored `.env`) — see [`docs/OVERLEAF_MCP_SETUP.md`](docs/OVERLEAF_MCP_SETUP.md)
+- Claude Code: run `npx overleaf-mcp` in a terminal (no `.cursor/mcp.json` required)
+- Details and security rules: [`docs/MCP_OVERLEAF_OPTIONAL.md`](docs/MCP_OVERLEAF_OPTIONAL.md)
 
 ## Shelby MCP (optional — Cursor + Claude)
 
@@ -131,7 +145,7 @@ Do not translate `paper/main.tex` unless explicitly requested.
 
 ## Tests
 
-`./scripts/run_tests.sh smoke` — Gurobi, log lineage, paper pipeline fixtures + legend figure
+`./scripts/run_tests.sh smoke` and `./scripts/run_tests.sh unit` — framework-only regression gate (no thesis data required)
 
 ## Cursor ↔ Claude parity
 

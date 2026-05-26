@@ -58,6 +58,50 @@ See `docs/TRANSLATION_GUIDE.md` when the user requests ES→EN translation of in
 
 ---
 
+## Continuous onboarding (runtime SA0–SA13)
+
+Product onboarding does not end after SA0. Every runtime step should help the user understand **why** before **what**, and require **explicit approval** before HANDOFF on gated artifacts.
+
+Canonical references:
+
+| Doc | Role |
+|-----|------|
+| [ONBOARDING_RATIONALE.md](ONBOARDING_RATIONALE.md) | WHY / ASK / YOU_DO per SA0 block |
+| [USER_APPROVAL_GATES.md](USER_APPROVAL_GATES.md) | G0–G13, tokens, `workflowProfile` matrix |
+| [WORKSPACE_MODEL.md](WORKSPACE_MODEL.md) | Three-repo boundaries |
+
+### WHY-before-ASK (mandatory)
+
+Before each user question or block transition:
+
+1. Emit **2–4 sentences**: why the step matters, what it protects, what it unlocks.
+2. Use labels: **`WHY:`** → **`ASK:`** → **`YOU_DO:`**
+3. Wait for brief confirmation or an answer; if declined, log `skipped` + reason in `memory/intake_report.md`.
+4. **Prohibited:** question lists without a WHY paragraph; internal jargon (“SA3 gate”) without user-facing benefit.
+
+### AUDIT and APPROVE_ASK (mandatory on gated steps)
+
+After creating or updating a gate artifact:
+
+1. **`AUDIT:`** — paths, 3–7 bullet checklist for the user.
+2. **`APPROVE_ASK:`** — request `APPROVED: <gate_id>` or `APROBADO: <gate_id>`.
+3. Write `memory/user_approval_log.md` with `status: approved` (or `approved_with_edits`) before HANDOFF.
+4. Without approval → **`TAREA INCOMPLETA`** and **`BLOQUEADO: no lanzar SA<n+1>`**.
+
+### Mini-Guía (every SA prompt SA1–SA13)
+
+Prefix each runtime prompt with:
+
+```text
+WHY_THIS_STEP: <2–3 sentences — use chat_language; English canonical in plan/docs>
+WHAT_I_NEED: <inputs, files, confirmations>
+WHAT_I_WILL_NOT_TOUCH: <readOnlyRoots, thesis Overleaf, framework repo, …>
+```
+
+Optional mirror in orchestration prompts as three bullets: **Why this step** / **What I need** / **What I will not touch**.
+
+---
+
 ## Handoff and closure protocol
 
 Every subagent or executor step must end with one of:
@@ -138,6 +182,10 @@ After the framework is built, user-controlled subagents SA0–SA13 follow [`.cur
 | Document | Contents |
 |----------|----------|
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Mermaid diagrams, `fttp.config.json`, layout |
+| [`ONBOARDING.md`](ONBOARDING.md) | Install → SA0 → doctor → RUN |
+| [`ONBOARDING_RATIONALE.md`](ONBOARDING_RATIONALE.md) | WHY-before-ASK blocks |
+| [`USER_APPROVAL_GATES.md`](USER_APPROVAL_GATES.md) | Audit/approve gates |
+| [`WORKSPACE_MODEL.md`](WORKSPACE_MODEL.md) | Three-repo model |
 | [`PAPER_PRODUCTION_PIPELINE.md`](PAPER_PRODUCTION_PIPELINE.md) | CLI subcommands, tables → PDF |
 | [`PORTFOLIO.md`](PORTFOLIO.md) | Portfolio narrative, core vs OR pack |
 | [`TRANSLATION_GUIDE.md`](TRANSLATION_GUIDE.md) | ES→EN infra translation |

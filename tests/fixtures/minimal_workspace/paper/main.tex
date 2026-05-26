@@ -1,0 +1,52 @@
+% Journal manuscript stub — minimal-ws
+%
+% After SA0/SA1 venue setup:
+%   - Install publisher class files under paper/latex/ (BYO — framework does not ship .cls)
+%   - Point paper.mainTex or venueProfiles.primary.mainTex to the venue entry file
+%   - Replace \documentclass below with your journal class
+%
+% Do not invent table values; anchor claims to memory/thesis_experiment_catalog.md
+% and paper/tables/*.tex after SA4 triangulation.
+
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+\title{TBD --- Working title}
+\author{TBD}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+TBD --- Abstract after paper strategy brief (SA7) and evidence gates (SA3--SA4).
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+TBD --- Introduction drafted in SA8 from signed \texttt{memory/paper\_strategy\_brief.md}.
+
+\section{Methodology}
+\label{sec:method}
+
+TBD --- Model formulation; align with thesis source and read-only notebooks.
+
+\section{Experiments}
+\label{sec:experiments}
+
+TBD --- Tables from \texttt{paper/tables/}; numeric cells must match catalog or show TBD/DISCREPANCY.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+TBD.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

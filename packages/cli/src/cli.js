@@ -15,6 +15,8 @@ const PYTHON_SUBCOMMANDS = new Set([
   "figures",
   "compile",
   "pipeline",
+  "scaffold",
+  "env-suggest",
 ]);
 
 function findRepoRoot(startDir) {
@@ -206,12 +208,12 @@ function cmdDoctor(repoRoot) {
   return 0;
 }
 
-function cmdPythonSubcommand(command, repoRoot) {
+function cmdPythonSubcommand(argv, repoRoot) {
   const python = resolvePython(repoRoot);
   const configPath = resolveConfigPath(repoRoot, process.cwd());
-  const run = runPython(python, ["-m", "fttp", command], {
+  const run = runPython(python, ["-m", "fttp", ...argv], {
     repoRoot,
-    cwd: repoRoot,
+    cwd: process.cwd(),
     fttpConfig: configPath || undefined,
   });
   if (run.stdout) process.stdout.write(run.stdout);
@@ -223,12 +225,15 @@ function printUsage() {
   console.log(`Usage: fttp <command>
 
 Commands:
-  doctor     Check Python fttp, config, and key workspace paths
-  tables     Export LaTeX table fragments (python -m fttp tables)
-  evidence   Build evidence bundle stub (python -m fttp evidence)
-  figures    Refresh figure assets stub (python -m fttp figures)
-  compile    Verify paper PDF paths (python -m fttp compile)
-  pipeline   Run tables → evidence → figures → compile (python -m fttp pipeline)
+  doctor        Check Python fttp, config, and key workspace paths
+  scaffold      Create paper workspace (python -m fttp scaffold --slug X --parent DIR)
+  env-suggest   Suggest .env keys (python -m fttp env-suggest --roots PATH...)
+  venue         Venue checks (python -m fttp venue validate)
+  tables        Export LaTeX table fragments (python -m fttp tables)
+  evidence      Build evidence bundle stub (python -m fttp evidence)
+  figures       Refresh figure assets stub (python -m fttp figures)
+  compile       Verify paper PDF paths (python -m fttp compile)
+  pipeline      Run tables → evidence → figures → compile (python -m fttp pipeline)
 
 Environment:
   FTTP_PYTHON   Python executable (default: .venv/bin/python, then python3)
@@ -258,8 +263,25 @@ function main() {
     process.exit(cmdDoctor(repoRoot));
   }
 
+  if (command === "venue") {
+    const rest = argv.slice(1);
+    if (!rest.length) {
+      console.error("Usage: fttp venue validate");
+      process.exit(1);
+    }
+    process.exit(cmdPythonSubcommand(["venue", ...rest], repoRoot));
+  }
+
+  if (command === "env-suggest") {
+    process.exit(cmdPythonSubcommand(argv, repoRoot));
+  }
+
+  if (command === "scaffold") {
+    process.exit(cmdPythonSubcommand(argv, repoRoot));
+  }
+
   if (PYTHON_SUBCOMMANDS.has(command)) {
-    process.exit(cmdPythonSubcommand(command, repoRoot));
+    process.exit(cmdPythonSubcommand([command], repoRoot));
   }
 
   console.error(`Unknown command: ${command}`);
