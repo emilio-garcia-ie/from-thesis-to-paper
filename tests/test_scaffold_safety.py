@@ -147,3 +147,45 @@ def test_force_rejects_symlinked_missing_hook_destination(tmp_path):
         scaffold_workspace("symlink-hook-ws", tmp_path, force=True)
     assert hook_link.is_symlink()
     assert target.read_text(encoding="utf-8") == "keep\n"
+
+
+@pytest.mark.smoke
+@pytest.mark.parametrize("relative", ["codigo", "paper/figures", "paper/tables", "memory"])
+def test_force_rejects_every_managed_symlink_before_any_write(tmp_path, relative):
+    dest = tmp_path / "managed-link-ws"
+    dest.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = dest / relative
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(outside, target_is_directory=True)
+    with pytest.raises(FttpConfigError, match="symlink"):
+        scaffold_workspace("managed-link-ws", tmp_path, force=True)
+    assert list(outside.iterdir()) == []
+    assert not (dest / "README.md").exists()
+
+
+@pytest.mark.smoke
+def test_force_validates_read_only_overlap_before_copying(tmp_path, monkeypatch):
+    dest = tmp_path / "read-only-ws"
+    dest.mkdir()
+    cfg = {
+        "workspaceName": "read-only-ws",
+        "workspaceSlug": "read-only-ws",
+        "repoRoot": str(dest),
+        "paper": {"dir": "paper", "mainTex": "main.tex"},
+        "readOnlyRoots": [str(tmp_path)],
+    }
+    (dest / "fttp.config.json").write_text(json.dumps(cfg), encoding="utf-8")
+    copied: list[Path] = []
+    original = __import__("fttp.scaffold", fromlist=["_copy_missing"])._copy_missing
+
+    def track(*args, **kwargs):
+        copied.append(Path(args[1]))
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr("fttp.scaffold._copy_missing", track)
+    with pytest.raises(FttpConfigError, match="overlaps"):
+        scaffold_workspace("read-only-ws", tmp_path, force=True)
+    assert copied == []
+    assert not (dest / "README.md").exists()

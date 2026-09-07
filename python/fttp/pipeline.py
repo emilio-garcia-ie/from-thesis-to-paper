@@ -39,7 +39,7 @@ def run_pipeline(cfg: dict[str, Any] | None = None) -> int:
         return 1
 
     for name, handler in STEPS:
-        print(f"fttp pipeline: step {name}")
+        print(f"fttp pipeline: step {name}", flush=True)
         code = handler(cfg)
         if code != 0:
             print(

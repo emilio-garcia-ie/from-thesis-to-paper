@@ -278,10 +278,25 @@ def validate_onboarding_fields(
                 raise FttpConfigError(
                     f"Config {label}: readOnlyRoots[{idx}] must be a non-empty path string"
                 )
-            if root is not None:
-                from fttp.paths import validate_root_relationships
-                validate_root_relationships(root, read_only)
-                break
+        if root is not None:
+            from fttp.paths import validate_root_relationships
+
+            validate_root_relationships(root, read_only)
+
+    packs = cfg.get("packs")
+    if packs is not None:
+        if not isinstance(packs, list) or not all(
+            isinstance(pack, str) and pack.strip() for pack in packs
+        ):
+            raise FttpConfigError(
+                f"Config {label}: packs must be an array of non-empty strings"
+            )
+
+    agent_stack = cfg.get("agentStack")
+    if agent_stack is not None and agent_stack not in {"cursor", "claude", "codex"}:
+        raise FttpConfigError(
+            f"Config {label}: agentStack must be one of: cursor, claude, codex"
+        )
 
 
 def validate_hooks(cfg: dict[str, Any], config_path: Path | str | None = None) -> None:

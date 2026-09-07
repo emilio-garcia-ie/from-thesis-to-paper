@@ -1,6 +1,6 @@
 {
   "name": "from-thesis-to-paper",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI wrapper for the fttp Python paper pipeline",
   "license": "MIT",
   "type": "commonjs",

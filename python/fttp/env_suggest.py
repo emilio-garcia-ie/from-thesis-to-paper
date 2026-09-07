@@ -201,27 +201,51 @@ def _collect_suggestions_report(
         def _walk_error(error: OSError) -> None:
             state.note(f"unreadable directory: {getattr(error, 'filename', root)}")
 
-        for current, dirs, files in os.walk(
-            root, topdown=True, onerror=_walk_error, followlinks=False
-        ):
-            current_path = Path(current)
-            state.visited += 1
-            if state.visited > MAX_VISITED_ENTRIES:
-                state.note(f"visited-entry limit ({MAX_VISITED_ENTRIES}) reached under: {root}")
+        # ``os.walk`` consumes a whole directory before yielding it.  Traverse
+        # through scandir instead so the global entry budget bounds real work,
+        # not merely the number we report after the fact.
+        pending = [root]
+        exhausted = False
+        while pending and not exhausted:
+            current_path = pending.pop()
+            entries: list[os.DirEntry[str]] = []
+            try:
+                with os.scandir(current_path) as iterator:
+                    while state.visited < MAX_VISITED_ENTRIES:
+                        try:
+                            entry = next(iterator)
+                        except StopIteration:
+                            break
+                        state.visited += 1
+                        entries.append(entry)
+                    if state.visited >= MAX_VISITED_ENTRIES:
+                        # Do not request one more entry merely to distinguish
+                        # an exact-size directory from an over-limit one: that
+                        # extra request defeats the advertised hard bound.
+                        state.note(
+                            f"visited-entry limit ({MAX_VISITED_ENTRIES}) reached under: {root}"
+                        )
+                        exhausted = True
+            except OSError as exc:
+                _walk_error(exc)
+                continue
+            # A partially enumerated directory is deliberately not processed:
+            # processing it would make results depend on filesystem order.
+            if exhausted:
                 break
-            dirs[:] = sorted(
-                name
-                for name in dirs
-                if name not in _PRUNED_DIRS
-                and not (current_path / name).is_symlink()
-            )
-            for name in sorted(files):
-                if state.visited >= MAX_VISITED_ENTRIES:
-                    state.note(f"visited-entry limit ({MAX_VISITED_ENTRIES}) reached under: {root}")
-                    break
-                state.visited += 1
-                path = current_path / name
-                if path.is_symlink() or not path.is_file():
+            for entry in sorted(entries, key=lambda item: item.name, reverse=True):
+                path = Path(entry.path)
+                try:
+                    if entry.is_symlink():
+                        continue
+                    if entry.is_dir(follow_symlinks=False):
+                        if entry.name not in _PRUNED_DIRS:
+                            pending.append(path)
+                        continue
+                    if not entry.is_file(follow_symlinks=False):
+                        continue
+                except OSError:
+                    state.note(f"unreadable input: {path}")
                     continue
                 if path.suffix == ".ipynb":
                     if state.notebooks >= max_notebooks:

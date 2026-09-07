@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from fttp import env_suggest
 from fttp.env_suggest import MAX_FILE_BYTES, suggest_env
 
 
@@ -88,3 +89,37 @@ def test_notebook_limit_is_deterministic(tmp_path, capsys):
     _, code = suggest_env([tmp_path])
     assert code == 1
     assert "notebook limit" in capsys.readouterr().err
+
+
+@pytest.mark.smoke
+def test_entry_limit_bounds_actual_scandir_iteration(tmp_path, monkeypatch):
+    for index in range(30):
+        (tmp_path / f"{index:03d}.py").write_text("import os\n", encoding="utf-8")
+    monkeypatch.setattr(env_suggest, "MAX_VISITED_ENTRIES", 5)
+    seen = 0
+    original_scandir = env_suggest.os.scandir
+
+    class CountedScandir:
+        def __init__(self, path):
+            self.iterator = original_scandir(path)
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            self.iterator.close()
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            nonlocal seen
+            entry = next(self.iterator)
+            seen += 1
+            return entry
+
+    monkeypatch.setattr(env_suggest.os, "scandir", CountedScandir)
+    _, state = env_suggest._collect_suggestions_report([tmp_path])
+    assert seen == 5
+    assert state.visited == 5
+    assert any("visited-entry limit" in item for item in state.incomplete)

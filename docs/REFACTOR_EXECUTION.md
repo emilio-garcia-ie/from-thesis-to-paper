@@ -91,6 +91,21 @@ copied to the isolated checkout after their SHA-256 hashes were compared.
 No thesis data, credentials, external service, Gurobi run, publication, or
 consumer workspace was modified during recovery.
 
+## Production-readiness follow-up
+
+- The former automated completion claim is corrected by
+  [`PRODUCTION_READINESS.md`](PRODUCTION_READINESS.md): the 110-test result
+  and hosted run remain historical evidence, but they did not cover the
+  subsequently reproduced scaffold escape, scanner-enumeration, installed
+  workflow, installer, or live-agent guarantees.
+- Candidate `0.2.0` adds transactional scaffold preflight, measured scanner
+  traversal limits, cancellation handling, a selected-agent consumer
+  workspace, clean console-script artifact tests, and an offline release ZIP.
+- Local candidate verification: 128 tests passed with no skips; the consumer,
+  distribution, installer, and release-bundle selection passed in clean
+  temporary environments. Hosted CI and fresh Cursor, Claude Code, and Codex
+  walkthroughs remain required release gates.
+
 ## Task ledger
 
 | Task | Status | Proof / affected scope |
@@ -108,3 +123,8 @@ consumer workspace was modified during recovery.
 | D05 | complete | Locked dev/build metadata, npm lockfile, pinned-action CI workflow, named smoke/unit/integration entrypoints, Node 18/22 parity jobs, JUnit/artifact gates, and three-archive manifest checks are present. Hosted run 34165335701 passed all eight Linux/macOS Python and Node jobs. |
 | D06 | pending manual sign-off | Disposable CLI walkthrough is complete; live Cursor and Claude sessions were unavailable and are explicitly recorded as a release follow-up. |
 | G04 | pending D06 | Automated verification is green, but final review readiness/publication sign-off requires the interactive evidence in D06. |
+| P01 / S01–S05 | complete locally | The production acceptance record, external-write preflight, bounded `scandir` traversal, configuration validation, cancellation handling, and `FTTP_HOOK_PYTHON` tests are present; candidate tests pass locally. |
+| U01–U05 / G02 | complete locally | The wheel/sdist bundle local guides, memory, one selected agent layout, and `init`/`start`/`status`; clean installed console-script acceptance tests pass. |
+| I01–I02 / G03 | complete locally | The offline private installer and ZIP build/install/rollback/uninstall tests pass with disposable prefixes. |
+| D01 | complete locally | Primary documentation now follows download, install, init, and start; support, security, and release guidance are included. |
+| D02 / Q01–Q03 / G04 / R01 | pending | Hosted candidate CI, fresh agent-host walkthroughs, final readiness audit, and the explicitly approved release action remain open. |

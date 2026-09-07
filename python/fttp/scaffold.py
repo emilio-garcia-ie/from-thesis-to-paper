@@ -173,6 +173,60 @@ def _ensure_layout_dirs(dest: Path, created: list[Path]) -> None:
             created.append(keep)
 
 
+def _reject_symlink_components(dest: Path, relative: Path) -> None:
+    """Reject every existing symlink on a framework-controlled write path."""
+    cursor = dest
+    for part in relative.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise FttpConfigError(f"Cannot scaffold through symlink: {cursor}")
+
+
+def _template_paths(source: object, relative: Path = Path()) -> Iterator[Path]:
+    """Yield every template path so preflight covers files and empty dirs."""
+    yield relative
+    if bool(getattr(source, "is_dir")()):
+        for child in source.iterdir():
+            yield from _template_paths(child, relative / child.name)
+
+
+def _preflight_destination(dest: Path, source: object, slug: str) -> None:
+    """Validate all writes before copying a single template byte."""
+    if dest.is_symlink():
+        raise FttpConfigError(f"Destination must not be a symlink: {dest}")
+    for relative in _template_paths(source):
+        if relative.parts:
+            _reject_symlink_components(dest, relative)
+    for relative in (
+        Path("memory"),
+        Path("experimentos/evidence"),
+        Path("paper/latex"),
+        Path("paper/tables"),
+        Path("paper/figures"),
+        Path("codigo"),
+    ):
+        _reject_symlink_components(dest, relative)
+
+    # Existing configuration is authoritative in a --force operation. Load it
+    # before writes so invalid roots and escaping hooks cannot create files.
+    cfg_path = dest / "fttp.config.json"
+    if not cfg_path.is_file():
+        return
+    try:
+        raw = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise FttpConfigError(f"Cannot read workspace config: {cfg_path}: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise FttpConfigError(f"Workspace config must be a JSON object: {cfg_path}")
+    if raw.get("workspaceSlug") not in (None, _PLACEHOLDER, slug):
+        raise FttpConfigError(f"Existing workspace config has a different workspaceSlug: {cfg_path}")
+    if raw.get("workspaceName") not in (None, _PLACEHOLDER, slug):
+        raise FttpConfigError(f"Existing workspace config has a different workspaceName: {cfg_path}")
+    if raw.get("repoRoot") not in (None, str(dest.resolve())):
+        raise FttpConfigError(f"Existing workspace config points at a different repoRoot: {cfg_path}")
+    load_config(cfg_path)
+
+
 def _ensure_stub_hooks(dest: Path, cfg: dict, created: list[Path]) -> None:
     hooks = cfg.get("hooks") or {}
     for rel in hooks.values():
@@ -221,13 +275,17 @@ def scaffold_workspace(slug: str, parent: Path, *, force: bool = False) -> Path:
             )
         if dest.is_file():
             raise FttpConfigError(f"Destination is a file, not a directory: {dest}")
-    else:
-        dest.mkdir(parents=True)
-        new_destination = True
-
-    created: list[Path] = [dest] if new_destination else []
+    created: list[Path] = []
+    new_files: list[Path] = []
     try:
         with _template_source() as src:
+            _preflight_destination(dest, src, slug)
+            if not dest.exists():
+                # Do not use exist_ok here: a concurrent creator is a conflict,
+                # never an invitation to copy into somebody else's workspace.
+                dest.mkdir(parents=True)
+                new_destination = True
+                created.append(dest)
             for item in src.iterdir():
                 _copy_missing(item, dest / item.name, created)
 
@@ -257,8 +315,6 @@ def scaffold_workspace(slug: str, parent: Path, *, force: bool = False) -> Path:
             raise FttpConfigError(f"Existing workspace config has a different workspaceSlug: {cfg_path}")
         if raw.get("workspaceName") not in (None, _PLACEHOLDER, slug):
             raise FttpConfigError(f"Existing workspace config has a different workspaceName: {cfg_path}")
-        if cfg_path not in created and raw.get("repoRoot") not in (None, str(dest.resolve())):
-            raise FttpConfigError(f"Existing workspace config points at a different repoRoot: {cfg_path}")
         if cfg_path in created:
             _patch_config_repo_root(dest, slug)
         try:

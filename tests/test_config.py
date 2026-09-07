@@ -134,6 +134,17 @@ def test_load_config_rejects_invalid_workflow_profile(tmp_path, monkeypatch):
 
 
 @pytest.mark.smoke
+def test_load_config_rejects_non_string_packs(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("FTTP_CONFIG", raising=False)
+    cfg = _minimal_config(tmp_path)
+    cfg["packs"] = [1]
+    (tmp_path / "fttp.config.json").write_text(json.dumps(cfg), encoding="utf-8")
+    with pytest.raises(FttpConfigError, match="packs"):
+        load_config()
+
+
+@pytest.mark.smoke
 def test_load_config_accepts_onboarding_v2_fields(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("FTTP_CONFIG", raising=False)

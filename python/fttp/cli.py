@@ -12,8 +12,11 @@ from fttp.commands import (
     cmd_doctor,
     cmd_evidence,
     cmd_figures,
+    cmd_init,
     cmd_lineage_build,
     cmd_lineage_validate,
+    cmd_start,
+    cmd_status,
     cmd_tables,
 )
 from fttp.env_suggest import cmd_env_suggest
@@ -45,6 +48,19 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Allow scaffolding into an existing directory",
     )
+
+    init = sub.add_parser("init", help="Create a guided paper workspace")
+    init.add_argument("path", type=Path, help="New workspace directory")
+    init.add_argument(
+        "--agent", choices=("cursor", "claude", "codex"),
+        help="Agent integration to install in this workspace",
+    )
+    init.add_argument(
+        "--read-only-root", type=Path, action="append", default=[],
+        help="Approved external source root (repeatable)",
+    )
+    sub.add_parser("start", help="Print the next guided-intake step")
+    sub.add_parser("status", help="Report workspace setup without certifying paper readiness")
 
     env_s = sub.add_parser(
         "env-suggest",
@@ -89,12 +105,34 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except KeyboardInterrupt:
+        print("fttp: interrupted", file=sys.stderr)
+        return 130
 
     if args.command == "doctor":
         return cmd_doctor()
     if args.command == "scaffold":
         return cmd_scaffold(args.slug, args.parent, force=args.force)
+    if args.command == "init":
+        if args.agent is None:
+            if not sys.stdin.isatty():
+                print("fttp init: --agent is required when stdin is not a terminal", file=sys.stderr)
+                return 1
+            try:
+                args.agent = input("Agent (cursor, claude, codex): ").strip().lower()
+            except KeyboardInterrupt:
+                print("fttp: interrupted", file=sys.stderr)
+                return 130
+            if args.agent not in {"cursor", "claude", "codex"}:
+                print("fttp init: choose cursor, claude, or codex", file=sys.stderr)
+                return 1
+        return cmd_init(args.path, args.agent, args.read_only_root)
+    if args.command == "start":
+        return cmd_start()
+    if args.command == "status":
+        return cmd_status()
     if args.command == "env-suggest":
         return cmd_env_suggest(args.roots, write=args.write)
     if args.command == "venue":

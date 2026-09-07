@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tarfile
+import venv
 from pathlib import Path
 
 import pytest
@@ -53,6 +54,32 @@ def _install_and_scaffold(artifact: Path, tmp_path: Path, label: str) -> Path:
     )
     assert result.returncode == 0, result.stdout + result.stderr
     return tmp_path / f"{label}-ws"
+
+
+@pytest.mark.smoke
+def test_wheel_console_script_runs_from_clean_private_environment(tmp_path):
+    artifacts = tmp_path / "artifacts"
+    artifacts.mkdir()
+    wheel, _ = _build_artifacts(artifacts)
+    environment = tmp_path / "consumer-env"
+    venv.EnvBuilder(with_pip=True).create(environment)
+    python = environment / "bin" / "python"
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+    installed = subprocess.run(
+        [str(python), "-m", "pip", "install", "--no-index", "--no-deps", str(wheel)],
+        env=env, text=True, capture_output=True, check=False,
+    )
+    assert installed.returncode == 0, installed.stdout + installed.stderr
+    consumer = tmp_path / "clean console"
+    consumer.mkdir()
+    workspace = consumer / "my-paper"
+    result = subprocess.run(
+        [str(environment / "bin" / "fttp"), "init", str(workspace), "--agent", "codex"],
+        cwd=tmp_path, env=env, text=True, capture_output=True, check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (workspace / ".agents" / "skills" / "agent-intake" / "SKILL.md").is_file()
 
 
 @pytest.mark.smoke

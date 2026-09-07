@@ -89,4 +89,4 @@ def test_wrapper_version_is_local_and_does_not_need_python(tmp_path):
     env["FTTP_PYTHON"] = str(tmp_path / "missing-python")
     result = _run_node(tmp_path, "--version", env=env)
     assert result.returncode == 0
-    assert result.stdout.strip() == "from-thesis-to-paper 0.1.0"
+    assert result.stdout.strip() == "from-thesis-to-paper 0.2.0"

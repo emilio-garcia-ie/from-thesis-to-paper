@@ -60,6 +60,8 @@ def verify(artifact_dir: Path, manifest_path: Path) -> int:
             "fttp/_templates/paper-workspace/fttp.config.json",
             "fttp/_templates/paper-workspace/.env.example",
             "fttp/_templates/paper-workspace/scripts/run_tests.sh",
+            "fttp/_resources/consumer/GETTING_STARTED.md",
+            "fttp/_resources/skills/core/agent-intake.md",
         },
         wheel.name,
     )
@@ -68,6 +70,9 @@ def verify(artifact_dir: Path, manifest_path: Path) -> int:
         {
             "templates/paper-workspace/fttp.config.json",
             "templates/paper-workspace/.env.example",
+            "templates/consumer/GETTING_STARTED.md",
+            "templates/memory/intake_report_TEMPLATE.md",
+            "skills/core/agent-intake.md",
             "python/build_support.py",
         },
         sdist.name,

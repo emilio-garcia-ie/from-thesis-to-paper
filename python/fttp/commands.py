@@ -22,6 +22,52 @@ from fttp.execution import run_local_command
 from fttp.paths import resolve_under
 
 
+def cmd_init(destination: Path, agent: str, read_only_roots: list[Path]) -> int:
+    from fttp.consumer import initialize_workspace
+
+    try:
+        workspace = initialize_workspace(
+            destination, agent=agent, read_only_roots=read_only_roots
+        )
+    except (FttpConfigError, OSError, ValueError) as exc:
+        return _missing(f"fttp init: {exc}")
+    print(f"fttp init: OK — {workspace}")
+    print(f"  agent: {agent}")
+    print(f"  next: cd {workspace} && fttp start")
+    return 0
+
+
+def cmd_start() -> int:
+    try:
+        cfg = load_config()
+    except FttpConfigError as exc:
+        return _missing(f"fttp start: {exc}")
+    root = repo_root(cfg)
+    guide = root / "GETTING_STARTED.md"
+    agent = cfg.get("agentStack", "not selected")
+    print(f"fttp start: open this folder in {agent}: {root}")
+    print(f"  read: {guide}")
+    print(
+        "  prompt: Start FTTP intake for this workspace. Explain why each question "
+        "matters before asking it. Do not access external sources or approve artifacts "
+        "without my explicit confirmation."
+    )
+    return 0
+
+
+def cmd_status() -> int:
+    from fttp.consumer import consumer_status
+
+    try:
+        cfg = load_config()
+    except FttpConfigError as exc:
+        return _missing(f"fttp status: {exc}")
+    print("fttp status: setup report (not a manuscript readiness certificate)")
+    for notice in consumer_status(cfg):
+        print(f"  - {notice}")
+    return 0
+
+
 def _missing(msg: str) -> int:
     print(msg, file=sys.stderr)
     return 1
@@ -70,9 +116,9 @@ def run_hook(name: str, cfg: dict[str, Any]) -> int:
             f"  Configure hooks.{name} or create the script."
         )
 
-    print(f"fttp: running hooks.{name} -> {script.relative_to(root)}")
+    print(f"fttp: running hooks.{name} -> {script.relative_to(root)}", flush=True)
     if script.suffix == ".py":
-        cmd = [sys.executable, str(script)]
+        cmd = [__import__("os").environ.get("FTTP_HOOK_PYTHON", sys.executable), str(script)]
     else:
         cmd = [str(script)]
 
@@ -238,8 +284,8 @@ def cmd_compile(cfg: dict[str, Any] | None = None) -> int:
     if script is not None:
         if not script.is_file():
             return _missing(f"fttp compile: {mode} script not found:\n  {script}")
-        print(f"fttp compile: running {mode} -> {script}")
-        cmd = [sys.executable, str(script)] if script.suffix == ".py" else [str(script)]
+        print(f"fttp compile: running {mode} -> {script}", flush=True)
+        cmd = [__import__("os").environ.get("FTTP_HOOK_PYTHON", sys.executable), str(script)] if script.suffix == ".py" else [str(script)]
         code = run_local_command(cmd, cwd=root)
         if code != 0:
             return code

@@ -1,6 +1,6 @@
 # End-user onboarding — install to first RUN
 
-> **Stack-neutral:** use **Cursor** or **Claude Code** with the same workspace and skills.  
+> **Stack-neutral:** use **Cursor**, **Claude Code**, or **Codex** with the generated workspace resources.
 > **Language:** English docs; agent chat may be Spanish or English per your choice in SA0.
 
 The framework does **not** collect thesis paths during its own build (P0–P11). **You** (or SA0 **CONSUMER_ONBOARD**) set up a dedicated **paper workspace** — see [WORKSPACE_MODEL.md](WORKSPACE_MODEL.md).
@@ -14,32 +14,25 @@ You will **audit and approve** key artifacts: [USER_APPROVAL_GATES.md](USER_APPR
 
 | Item | Notes |
 |------|-------|
-| Git | For framework clone and new paper repo |
-| Python 3.10+ | `pip install -e` on `from-thesis-to-paper` (Linux/macOS verification matrix) |
-| Node 18+ (optional) | Node 18 is legacy compatibility; Node 22 is the recommended wrapper runtime |
+| Python 3.10+ | Must include `venv`; Python 3.11+ is recommended |
+| Git | Optional; it is not needed for the release-bundle route |
+| Node | Optional; it is not needed for the release-bundle route |
 | LaTeX (optional early) | Needed before SA9 compile |
 | Overleaf account (optional) | Separate **thesis** (read-only) and **paper** (manuscript) projects |
-| Agent IDE | Cursor **or** Claude Code — do not cross-load `AGENTS.md` / `CLAUDE.md` (see [sync_cursor_claude.md](sync_cursor_claude.md)) |
+| Agent IDE | Cursor, Claude Code, or Codex; `fttp init` creates one matching integration |
 
 ---
 
-## Step 1 — Install the framework
+## Step 1 — Download and install the framework
 
 ```bash
-git clone https://github.com/<your-org>/from-thesis-to-paper.git
-cd from-thesis-to-paper
-python -m venv .venv
-source .venv/bin/activate   # Windows support is unverified
-pip install -e '.[dev]'
+bash install.sh
 ```
 
-Optional npm wrapper (when published or linked):
-
-```bash
-cd packages/cli && npm ci
-```
-
-**Verify (maintainer path):** `./scripts/run_tests.sh smoke` inside `REPO_FTTP`.
+Download and extract the matching GitHub Release first. FTTP requires Python
+3.10+ with `venv`; the installer creates a private environment and never edits
+your shell profile. It prints an absolute command if `~/.local/bin` is not on
+your `PATH`. Node and Git are not needed for this path.
 
 ---
 
@@ -49,9 +42,9 @@ Choose **one** path:
 
 | Method | Command / action |
 |--------|------------------|
-| **Scaffold (recommended)** | `python -m fttp scaffold --slug <workspaceSlug> --parent /path/to/parent` |
-| **Manual** | Copy `templates/paper-workspace/` to a new folder named `<workspaceSlug>` |
-| **SA0 agent** | Run prompt **SA0 `MODO: CONSUMER_ONBOARD`** — agent copies scaffold and asks blocks 0–G |
+| **Guided init (recommended)** | `fttp init /path/to/<workspaceSlug> --agent codex` |
+| **Scaffold** | `fttp scaffold --slug <workspaceSlug> --parent /path/to/parent` |
+| **Existing workspace** | Use `fttp scaffold` only when you need the lower-level template command |
 
 Rules for `<workspaceSlug>`:
 
@@ -64,7 +57,9 @@ Rules for `<workspaceSlug>`:
 
 ## Step 3 — Onboard (SA0 CONSUMER_ONBOARD)
 
-Use your agent stack entry file (`AGENTS.md` for Cursor, `CLAUDE.md` for Claude) and the SA0 prompt in [creacion-de-agentes.md](creacion-de-agentes.md) or [`.cursor/plans/from-thesis-to-paper_orchestration.plan.md`](../.cursor/plans/from-thesis-to-paper_orchestration.plan.md).
+Open the generated workspace in the selected agent, read `GETTING_STARTED.md`,
+and run `fttp start` for the ready-to-paste intake prompt. The workspace carries
+its own selected-agent instructions, skills, and local guides.
 
 SA0 covers (with **WHY** before each **ASK** — [ONBOARDING_RATIONALE.md](ONBOARDING_RATIONALE.md)):
 
@@ -95,14 +90,11 @@ SA0 covers (with **WHY** before each **ASK** — [ONBOARDING_RATIONALE.md](ONBOA
 From the **paper workspace** root (`repoRoot`):
 
 ```bash
-export FTTP_CONFIG=/path/to/paper-workspace/fttp.config.json   # if not default name
-python -m fttp doctor
-# or, when linked:
-npx from-thesis-to-paper doctor
+fttp doctor
 ```
 
 Expect exit code **0**. Warnings may include: missing `paper/latex/` when venue is set, `readOnlyRoots` inside `repoRoot`, or slug/folder mismatch (when strict mode is enabled).
-Doctor is a configuration check. A fresh scaffold reports placeholder hooks as warnings; replace those hooks before expecting a successful pipeline.
+Doctor is a configuration check. A fresh scaffold reports placeholder hooks as warnings; replace those hooks before expecting a successful pipeline. Use `fttp status` for the guided next action.
 
 `fttp scaffold --force` adds missing files without overwriting existing workspace files. Commands that write generated output use create-only behavior and fail if the target already exists.
 

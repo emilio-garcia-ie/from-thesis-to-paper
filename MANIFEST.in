@@ -1,6 +1,10 @@
 include python/build_support.py
 include LICENSE
 recursive-include templates/paper-workspace *
+recursive-include templates/memory *
+recursive-include templates/consumer *
+recursive-include skills *
+recursive-include docs *.md
 prune .git
 prune .venv
 prune build

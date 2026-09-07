@@ -2,7 +2,7 @@
 
 **from-thesis-to-paper** is an agent-oriented framework to turn a defended thesis and its run artifacts into a **journal-ready paper pipeline**: onboarding → evidence audit → strategy brief → IMRaD prose → figures/tables → (optional) Overleaf sync → submission bundle.
 
-It is designed for **Cursor** and **Claude Code** users who want a repeatable process with explicit **user approval gates** before the pipeline advances.
+It is designed for **Cursor**, **Claude Code**, and **Codex** users who want a repeatable process with explicit **user approval gates** before the pipeline advances.
 
 ---
 
@@ -86,58 +86,41 @@ flowchart LR
 
 ---
 
-## Install and first run (recommended path)
+## Install and first run
 
-### 1) Install the Python package (framework)
+### 1) Download and install FTTP
 
-From `REPO_FTTP`:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-```
-
-The supported verification matrix is Linux/macOS with Python 3.10, 3.11, and
-3.14. The optional Node wrapper supports Node >=18; Node 18 is retained for
-legacy compatibility and Node 22 is the recommended tested runtime. Windows
-support is unverified.
-
-Verify the CLI exists:
+Download the `fttp-<version>-macos-linux.zip` asset from the
+[GitHub Releases page](https://github.com/emilio-garcia-ie/from-thesis-to-paper/releases),
+extract it, and run:
 
 ```bash
-fttp --version
-python -m fttp --version
+bash install.sh
 ```
 
-### 2) Create a paper workspace (new writable repo)
+FTTP requires Python 3.10+ with `venv`; it creates a private environment under
+`~/.local/share/fttp` and a launcher under `~/.local/bin`. It does not edit
+your shell profile. Linux and macOS are supported; native Windows is not.
 
-Scaffold a new workspace from the template:
+### 2) Create a workspace and start intake
 
 ```bash
-python -m fttp scaffold --slug <workspaceSlug> --parent /path/to/parent
+~/.local/bin/fttp init ~/papers/my-paper --agent codex
+cd ~/papers/my-paper
+~/.local/bin/fttp start
 ```
 
-Then follow SA0 onboarding in your agent stack (Cursor or Claude Code), as described in:
+Choose `cursor`, `claude`, or `codex`. The command installs one matching agent
+integration, local guides, and memory templates. It does not contact any agent
+service, ask for credentials, or approve research artifacts.
 
-- [`docs/ONBOARDING.md`](docs/ONBOARDING.md)
+`fttp status` reports setup work. `fttp doctor` validates the configuration;
+neither command certifies a manuscript. `FTTP_HOOK_PYTHON=/path/to/python`
+selects the Python interpreter used for your Python research hooks.
 
-### 3) Run doctor (must be first)
-
-From inside your **paper workspace root** (`PAPER_WS`):
-
-```bash
-fttp doctor
-```
-
-If your config is not named `fttp.config.json`, point to it explicitly:
-
-```bash
-FTTP_CONFIG=/abs/path/to/fttp.config.json fttp doctor
-```
-
-What `doctor` checks: Python importability, config discovery, `repoRoot`, `paper.mainTex`, and optional evidence paths.
-Doctor reports placeholder hooks as warnings; it does not certify manuscript or evidence readiness.
+For development from a clone, see [docs/TESTING.md](docs/TESTING.md).
+The release checklist and remaining live-agent sign-offs are in
+[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md).
 
 ---
 
@@ -175,9 +158,10 @@ Note: `npx from-thesis-to-paper doctor` will only work if **you** have the packa
 
 ---
 
-## Cursor + Claude Code: shared workspace + skill mirrors
+## Agent workspace resources
 
-Most artifacts are shared between stacks; only the entry files and IDE-specific mirrors differ.
+`fttp init` creates only the selected agent integration. It also adds local
+guides and skills, so the guided intake does not depend on a framework clone.
 
 ```mermaid
 flowchart TB
@@ -189,24 +173,28 @@ flowchart TB
     SCR[scripts/ + tests/]
   end
 
-  subgraph cursor[Cursor-only]
+  subgraph cursor[Cursor]
     AG[AGENTS.md]
     CR[.cursor/rules/]
     CSK[.cursor/skills/ (mirror)]
     MCP[.cursor/mcp.json (optional)]
   end
 
-  subgraph claude[Claude Code-only]
+  subgraph claude[Claude Code]
     CL[CLAUDE.md]
     DSK[.claude/skills/ (mirror)]
     CSET[.claude/settings.local.json (optional)]
   end
 
+  subgraph codex[Codex]
+    CAG[AGENTS.md]
+    ASK[.agents/skills/]
+  end
+
   cursor --> shared
   claude --> shared
+  codex --> shared
 ```
-
-Sync checklist: [`docs/sync_cursor_claude.md`](docs/sync_cursor_claude.md).
 
 ---
 
