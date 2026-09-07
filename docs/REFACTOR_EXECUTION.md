@@ -78,8 +78,10 @@ copied to the isolated checkout after their SHA-256 hashes were compared.
 - The four pinned GitHub Action SHAs resolve upstream to Node 24-based
   checkout v6.0.3, setup-python v6.3.0, setup-node v6.5.0, and
   upload-artifact v6.0.0.
-- The pinned GitHub Actions workflow was inspected locally; no hosted CI run
-  was triggered because the original checkout was not pushed or published.
+- Hosted CI [run 34165335701](https://github.com/emilio-garcia-ie/from-thesis-to-paper/actions/runs/34165335701)
+  passed all eight jobs at `ac4d462`: Node 18/22 and Python 3.10/3.11/3.14
+  on Ubuntu and macOS. It exercised the full test, JUnit, smoke, packaging,
+  archive, and Node-parity gates using the Node 24-based action pins.
 - A fresh disposable first-use walkthrough passed scaffold, doctor, truthful
   placeholder failure, `--force` byte preservation, and configured offline
   pipeline/PDF checks; details are in the QA record.
@@ -103,6 +105,6 @@ consumer workspace was modified during recovery.
 | C05–C08 | complete | Wheel/sdist outside-checkout scaffolding, npm archive, and fake-npx launcher tests pass. |
 | G03 | complete | CLI, evidence, distribution, launcher, and safety selections pass together. |
 | D01–D04 | complete | Canonical content, generated mirrors, links, command references, onboarding, and documentation checks pass. |
-| D05 | configuration complete; hosted matrix pending | Locked dev/build metadata, npm lockfile, pinned-action CI workflow, named smoke/unit/integration entrypoints, Node 18/22 parity jobs, JUnit/artifact gates, local 110/1 JUnit reports, and three-archive manifest checks are present; no hosted run was triggered. |
+| D05 | complete | Locked dev/build metadata, npm lockfile, pinned-action CI workflow, named smoke/unit/integration entrypoints, Node 18/22 parity jobs, JUnit/artifact gates, and three-archive manifest checks are present. Hosted run 34165335701 passed all eight Linux/macOS Python and Node jobs. |
 | D06 | pending manual sign-off | Disposable CLI walkthrough is complete; live Cursor and Claude sessions were unavailable and are explicitly recorded as a release follow-up. |
-| G04 | pending D05/D06 | Automated verification is green, but final review readiness/publication sign-off must wait for hosted matrix results and D06 interactive evidence. |
+| G04 | pending D06 | Automated verification is green, but final review readiness/publication sign-off requires the interactive evidence in D06. |
