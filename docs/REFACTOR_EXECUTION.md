@@ -101,10 +101,11 @@ consumer workspace was modified during recovery.
 - Candidate `0.2.0` adds transactional scaffold preflight, measured scanner
   traversal limits, cancellation handling, a selected-agent consumer
   workspace, clean console-script artifact tests, and an offline release ZIP.
-- Local candidate verification: 128 tests passed with no skips; the consumer,
+- Local candidate verification: 130 tests passed with no skips; the consumer,
   distribution, installer, and release-bundle selection passed in clean
-  temporary environments. Hosted CI and fresh Cursor, Claude Code, and Codex
-  walkthroughs remain required release gates.
+  temporary environments. Hosted CI run 34171496032 passed all declared
+  platform/Python and Node jobs for `c374659`; fresh Cursor, Claude Code, and
+  Codex walkthroughs remain required release gates.
 
 ## Task ledger
 
@@ -127,4 +128,5 @@ consumer workspace was modified during recovery.
 | U01–U05 / G02 | complete locally | The wheel/sdist bundle local guides, memory, one selected agent layout, and `init`/`start`/`status`; clean installed console-script acceptance tests pass. |
 | I01–I02 / G03 | complete locally | The offline private installer and ZIP build/install/rollback/uninstall tests pass with disposable prefixes. |
 | D01 | complete locally | Primary documentation now follows download, install, init, and start; support, security, and release guidance are included. |
-| D02 / Q01–Q03 / G04 / R01 | pending | Hosted candidate CI, fresh agent-host walkthroughs, final readiness audit, and the explicitly approved release action remain open. |
+| D02 | complete for `c374659` | Hosted CI run 34171496032 passed all declared Linux/macOS Python and Node jobs. |
+| Q01–Q03 / G04 / R01 | pending | Fresh agent-host walkthroughs, final readiness audit, and the explicitly approved release action remain open. |

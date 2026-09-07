@@ -20,9 +20,12 @@ The production candidate is FTTP 0.2.0 on branch
 ## Remaining release gates
 
 The implementation is not yet a published production release. Before release,
-hosted CI must pass on the candidate commit and fresh users must complete the
-signed Cursor, Claude Code, and Codex walkthroughs. A maintainer must then
-explicitly approve merging, tagging, and publishing the GitHub Release.
+fresh users must complete the signed Cursor, Claude Code, and Codex
+walkthroughs. Hosted CI passed all declared jobs for implementation commit
+[`c374659`](https://github.com/emilio-garcia-ie/from-thesis-to-paper/commit/c374659d2eb63cb1e12e15aac594f5883ea75ded)
+in [run 34171496032](https://github.com/emilio-garcia-ie/from-thesis-to-paper/actions/runs/34171496032).
+A maintainer must then explicitly approve merging, tagging, and publishing the
+GitHub Release.
 
 ## Manual QA checklist
 
