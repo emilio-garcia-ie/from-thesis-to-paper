@@ -75,8 +75,9 @@ copied to the isolated checkout after their SHA-256 hashes were compared.
   their JUnit reports passed the strict checker.
 - Node 18 also passes the package-local `npm ci --ignore-scripts` and dry-run
   pack checks in addition to the parity suite.
-- The four pinned GitHub Action SHAs resolve upstream to checkout v4.4.0,
-  setup-python v5.6.0, setup-node v4.4.0, and upload-artifact v4.6.2.
+- The four pinned GitHub Action SHAs resolve upstream to Node 24-based
+  checkout v6.0.3, setup-python v6.3.0, setup-node v6.5.0, and
+  upload-artifact v6.0.0.
 - The pinned GitHub Actions workflow was inspected locally; no hosted CI run
   was triggered because the original checkout was not pushed or published.
 - A fresh disposable first-use walkthrough passed scaffold, doctor, truthful
