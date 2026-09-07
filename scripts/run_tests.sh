@@ -2,13 +2,23 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-PY="${ROOT}/.venv/bin/python"
-[[ -x "$PY" ]] || PY=python3
+export PYTHONPATH="$ROOT/python${PYTHONPATH:+:${PYTHONPATH}}"
+if [[ -n "${FTTP_PYTHON:-}" ]]; then
+  PY="$FTTP_PYTHON"
+elif [[ -x "${ROOT}/.venv/bin/python" ]]; then
+  PY="${ROOT}/.venv/bin/python"
+else
+  PY="python3"
+fi
+if [[ ! -x "$PY" ]] && ! command -v "$PY" >/dev/null 2>&1; then
+  echo "FAIL: Python interpreter not found: $PY" >&2
+  exit 1
+fi
 MODE="${1:-smoke}"
 case "$MODE" in
   smoke) exec "$PY" -m pytest tests/ -m smoke -q ;;
   unit)  exec "$PY" -m pytest tests/ -q ;;
-  integration) echo "integration: run in consumer workspace (MIP/golden)"; exit 0 ;;
+  integration) exec "$PY" -m pytest tests/integration -q ;;
   all)
     "$PY" -m pytest tests/ -m smoke -q
     exec "$PY" -m pytest tests/ -q

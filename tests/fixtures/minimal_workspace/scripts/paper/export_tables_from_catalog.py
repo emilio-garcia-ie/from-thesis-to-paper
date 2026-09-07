@@ -1,4 +1,5 @@
-"""Stub hook — replace with table export (SA9)."""
+"""Placeholder hook — replace with table export (SA9)."""
+FTTP_PLACEHOLDER_HOOK = True
 import sys
-print("fttp stub: tables (no-op)")
-sys.exit(0)
+print("fttp placeholder: tables is not configured; replace this hook", file=sys.stderr)
+sys.exit(1)

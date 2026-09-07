@@ -21,7 +21,7 @@ Uses browser automation (Playwright) — **works on Overleaf free tier**; no Git
 Edit **`.env`** only (gitignored). **Never** put real passwords in `.env.example`.
 
 ```bash
-cd /Users/emilio/Desktop/PaperEPN/mi-investigacion-opt
+cd /path/to/paper-workspace
 cp .env.example .env   # first time only
 # Edit .env — NO spaces around = :
 #   OVERLEAF_EMAIL=you@example.com

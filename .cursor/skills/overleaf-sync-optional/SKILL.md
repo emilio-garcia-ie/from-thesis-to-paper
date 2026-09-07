@@ -13,8 +13,9 @@ description: SA12 optional Overleaf sync for paper project only — read-only th
 
 ## Read order
 
-1. `docs/MCP_OVERLEAF_OPTIONAL.md` (or `docs/OVERLEAF_MCP_SETUP.md` in PaperEPN staging).
-2. `fttp.config.json` → `workspaceSlug`, `overleafPaper` — display name **must match slug** ([docs/WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md) §2).
+1. `docs/MCP_OVERLEAF_OPTIONAL.md` for the framework boundary and the optional
+   launcher template at `templates/scripts/overleaf_mcp.sh.example`.
+2. `fttp.config.json` → `workspaceSlug`, `overleafPaper` — display name **must match slug** ([docs/WORKSPACE_MODEL.md](../../../docs/WORKSPACE_MODEL.md) §2).
 3. `memory/overleaf_paper_project.md` if present — **paper project only** (same slug as workspace).
 4. `memory/overleaf_thesis_project.md` — **read-only** archaeology; **never write**.
 5. Local `paper/main.tex` is source of truth unless user says otherwise.
@@ -41,7 +42,7 @@ description: SA12 optional Overleaf sync for paper project only — read-only th
 
 ## G12-overleaf — AUDIT / APPROVE (when sync performed)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md). **Blocks SA13** when user wants submission via Overleaf after sync.
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md). **Blocks SA13** when user wants submission via Overleaf after sync.
 
 After `memory/overleaf_sync_log.md` and file list diff:
 

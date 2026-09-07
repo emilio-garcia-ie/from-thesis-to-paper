@@ -95,8 +95,13 @@ From `REPO_FTTP`:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e '.[dev]'
 ```
+
+The supported verification matrix is Linux/macOS with Python 3.10, 3.11, and
+3.14. The optional Node wrapper supports Node >=18; Node 18 is retained for
+legacy compatibility and Node 22 is the recommended tested runtime. Windows
+support is unverified.
 
 Verify the CLI exists:
 
@@ -132,6 +137,7 @@ FTTP_CONFIG=/abs/path/to/fttp.config.json fttp doctor
 ```
 
 What `doctor` checks: Python importability, config discovery, `repoRoot`, `paper.mainTex`, and optional evidence paths.
+Doctor reports placeholder hooks as warnings; it does not certify manuscript or evidence readiness.
 
 ---
 
@@ -143,7 +149,7 @@ Local install + link (so you can call `fttp` from anywhere):
 
 ```bash
 cd packages/cli
-npm install
+npm ci
 npm link
 ```
 
@@ -154,6 +160,10 @@ fttp doctor
 fttp tables
 fttp pipeline
 ```
+
+`tables`, `evidence`, `figures`, and `compile` delegate to the configured hooks. A fresh scaffold intentionally has failing placeholder hooks, so `pipeline` remains nonzero until those hooks are replaced and the compile hook creates a non-empty expected PDF. Use `fttp compile` alone for the explicitly labelled PDF existence check.
+
+Scaffolding with `--force` fills missing files only and preserves existing bytes. Generated `--write` outputs, such as `env-suggest --write`, refuse to overwrite an existing path.
 
 If you prefer not to link, you can run it directly:
 

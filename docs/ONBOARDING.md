@@ -15,7 +15,8 @@ You will **audit and approve** key artifacts: [USER_APPROVAL_GATES.md](USER_APPR
 | Item | Notes |
 |------|-------|
 | Git | For framework clone and new paper repo |
-| Python 3.10+ | `pip install -e` on `from-thesis-to-paper` |
+| Python 3.10+ | `pip install -e` on `from-thesis-to-paper` (Linux/macOS verification matrix) |
+| Node 18+ (optional) | Node 18 is legacy compatibility; Node 22 is the recommended wrapper runtime |
 | LaTeX (optional early) | Needed before SA9 compile |
 | Overleaf account (optional) | Separate **thesis** (read-only) and **paper** (manuscript) projects |
 | Agent IDE | Cursor **or** Claude Code — do not cross-load `AGENTS.md` / `CLAUDE.md` (see [sync_cursor_claude.md](sync_cursor_claude.md)) |
@@ -28,14 +29,14 @@ You will **audit and approve** key artifacts: [USER_APPROVAL_GATES.md](USER_APPR
 git clone https://github.com/<your-org>/from-thesis-to-paper.git
 cd from-thesis-to-paper
 python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e .
+source .venv/bin/activate   # Windows support is unverified
+pip install -e '.[dev]'
 ```
 
 Optional npm wrapper (when published or linked):
 
 ```bash
-cd packages/cli && npm install
+cd packages/cli && npm ci
 ```
 
 **Verify (maintainer path):** `./scripts/run_tests.sh smoke` inside `REPO_FTTP`.
@@ -48,7 +49,7 @@ Choose **one** path:
 
 | Method | Command / action |
 |--------|------------------|
-| **Scaffold (recommended when available)** | `python -m fttp scaffold --slug <workspaceSlug> --parent /path/to/parent` |
+| **Scaffold (recommended)** | `python -m fttp scaffold --slug <workspaceSlug> --parent /path/to/parent` |
 | **Manual** | Copy `templates/paper-workspace/` to a new folder named `<workspaceSlug>` |
 | **SA0 agent** | Run prompt **SA0 `MODO: CONSUMER_ONBOARD`** — agent copies scaffold and asks blocks 0–G |
 
@@ -101,6 +102,9 @@ npx from-thesis-to-paper doctor
 ```
 
 Expect exit code **0**. Warnings may include: missing `paper/latex/` when venue is set, `readOnlyRoots` inside `repoRoot`, or slug/folder mismatch (when strict mode is enabled).
+Doctor is a configuration check. A fresh scaffold reports placeholder hooks as warnings; replace those hooks before expecting a successful pipeline.
+
+`fttp scaffold --force` adds missing files without overwriting existing workspace files. Commands that write generated output use create-only behavior and fail if the target already exists.
 
 ---
 

@@ -1,4 +1,5 @@
-"""Stub hook — replace with figure generation (SA9)."""
+"""Placeholder hook — replace with figure generation (SA9)."""
+FTTP_PLACEHOLDER_HOOK = True
 import sys
-print("fttp stub: figures (no-op)")
-sys.exit(0)
+print("fttp placeholder: figures is not configured; replace this hook", file=sys.stderr)
+sys.exit(1)

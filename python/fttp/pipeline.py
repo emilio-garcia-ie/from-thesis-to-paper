@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 from typing import Any, Callable
 
-from fttp.commands import cmd_compile, cmd_evidence, cmd_figures, cmd_tables
+from fttp.commands import _resolve_compile_target, cmd_compile, cmd_evidence, cmd_figures, cmd_tables
 from fttp.config import FttpConfigError, load_config
 
 Step = tuple[str, Callable[[dict[str, Any] | None], int]]
@@ -23,6 +23,19 @@ def run_pipeline(cfg: dict[str, Any] | None = None) -> int:
         cfg = cfg or load_config()
     except FttpConfigError as exc:
         print(f"fttp pipeline: {exc}", file=sys.stderr)
+        return 1
+
+    try:
+        compile_script, _ = _resolve_compile_target(cfg)
+    except FttpConfigError as exc:
+        print(f"fttp pipeline: invalid configuration: {exc}", file=sys.stderr)
+        return 1
+    if compile_script is None:
+        print(
+            "fttp pipeline: a configured compile hook or active venue build is required; "
+            "the standalone PDF existence check is available only via `fttp compile`.",
+            file=sys.stderr,
+        )
         return 1
 
     for name, handler in STEPS:

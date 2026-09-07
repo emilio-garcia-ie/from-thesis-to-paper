@@ -1,4 +1,4 @@
-"""Parametrized LaTeX gate checks (optional FTTP_MAIN_TEX)."""
+"""Deterministic LaTeX gate checks for the shipped workspace fixture."""
 
 from __future__ import annotations
 
@@ -9,24 +9,23 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[1]
-DEFAULT_MAIN = REPO / "templates" / "paper" / "README.md"
+DEFAULT_MAIN = REPO / "templates" / "paper-workspace" / "paper" / "main.tex"
 
 
-def _main_tex_path() -> Path | None:
+def _main_tex_path() -> Path:
     env = os.environ.get("FTTP_MAIN_TEX", "").strip()
     if env:
         path = Path(env).expanduser()
-        return path if path.is_file() else None
-    if DEFAULT_MAIN.is_file():
-        return DEFAULT_MAIN
-    return None
+        if not path.is_file():
+            raise AssertionError(f"FTTP_MAIN_TEX does not exist: {path}")
+        return path
+    assert DEFAULT_MAIN.is_file(), f"shipped LaTeX fixture is missing: {DEFAULT_MAIN}"
+    return DEFAULT_MAIN
 
 
 @pytest.fixture
 def main_text() -> str:
     path = _main_tex_path()
-    if path is None:
-        pytest.skip("Set FTTP_MAIN_TEX to a manuscript .tex file for gate tests")
     return path.read_text(encoding="utf-8")
 
 

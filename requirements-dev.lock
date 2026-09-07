@@ -1,0 +1,10 @@
+# Generated from the verified Python 3.11 development environment.
+# Runtime package dependencies remain empty; install this file only for tests/builds.
+build==1.4.0; python_version >= "3.10"
+iniconfig==2.3.0; python_version >= "3.10"
+packaging==26.1; python_version >= "3.10"
+pluggy==1.6.0; python_version >= "3.10"
+pygments==2.14.0; python_version >= "3.10"
+pyproject_hooks==1.2.0; python_version >= "3.10"
+pytest==9.0.3; python_version >= "3.10"
+setuptools==84.0.0; python_version >= "3.10"

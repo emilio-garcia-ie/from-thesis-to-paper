@@ -77,6 +77,11 @@ isProject: false
 > **Spec:** [`from-thesis-to-paper_master.plan.md`](from-thesis-to-paper_master.plan.md)  
 > **Execution:** YOU launch one subagent per chat. Do NOT batch unless you say *"lanza todos los subagentes"*.
 
+> **Historical execution plan:** its BUILD/RUN todo history is retained. For
+> the current implementation contract and verified refactor state, see
+> [`docs/REFACTOR_CONTRACT.md`](../../docs/REFACTOR_CONTRACT.md) and
+> [`docs/REFACTOR_EXECUTION.md`](../../docs/REFACTOR_EXECUTION.md).
+
 **Replace before paste:**
 - `REPO_FTTP` = absolute path to **from-thesis-to-paper** framework clone (e.g. `~/from-thesis-to-paper`)
 - `REPO_WORKSPACE` = absolute path to **user writable workspace** (thesis + paper + memory; NOT the framework repo unless testing in-repo)
@@ -148,7 +153,7 @@ Reference: `docs/TESTING.md` in framework repo (create in B7). Pattern from Pape
 | SA1, SA2, SA2b, SA7, SA8 | **No pytest** | — |
 | **SA4** | `smoke` if `codigo/` or `tests/` present | **Yes** — gate before SA7 |
 | SA5 | `smoke` then `integration` if OR pack + Gurobi | **Yes** |
-| SA9 | **LaTeX only** (`fttp paper compile`) | PDF fail blocks |
+| SA9 | **LaTeX only** (`fttp compile` or configured venue build hook) | PDF fail blocks |
 | SA10 | Report last test status; run only if code_repro mode | — |
 | SA11 | `smoke` + `unit`; `integration` if MIP changed | **Yes** |
 | SA13 | `smoke` minimum in checklist | checklist item |
@@ -846,7 +851,7 @@ TAREAS:
 1. Extract 15–30 key terms from thesis (Overleaf read OR memory/thesis sources)
 2. Propose English equivalents; ASK USER confirm/reject/add per term
 3. Write memory/glossary_thesis_en.md
-4. Append ≤3 rows to REPO_FTTP/docs/TRANSLATION_GUIDE.md Maintenance if new canonical terms (append-only)
+4. Append ≤3 rows to the framework's `docs/TRANSLATION_GUIDE.md` Maintenance only when the maintainer explicitly requests a canonical terminology change; ordinary glossary output stays in `REPO_WORKSPACE`.
 
 PROHIBIDO: Translate full thesis catalog table cells
 
@@ -1110,9 +1115,9 @@ WHAT_I_WILL_NOT_TOUCH: readOnlyRoots; inventing table numbers not in catalog/joi
 AUDIT_GATE: G9-figures — paper/tables/*.tex, paper/figures/*, main.pdf if built. See docs/USER_APPROVAL_GATES.md. No HANDOFF SA12/SA13 until APPROVED: G9-figures logged in memory/user_approval_log.md.
 
 TAREAS:
-1. npx from-thesis-to-paper tables export (if needed)
-2. npx from-thesis-to-paper figures
-3. npx from-thesis-to-paper paper compile — or pdflatex per paper/README
+1. `npx from-thesis-to-paper tables` (if configured)
+2. `npx from-thesis-to-paper figures`
+3. `npx from-thesis-to-paper compile` — or the configured venue build hook
 4. Fix compile errors only in REPO_WORKSPACE/paper/
 
 VERIFICACIÓN TESTS:

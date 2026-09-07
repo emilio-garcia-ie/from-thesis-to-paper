@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Map PyPI-style package names to common env documentation keys (suggestions only).
@@ -23,12 +25,57 @@ _REQUIREMENT_LINE = re.compile(
     r"^[A-Za-z0-9][A-Za-z0-9_.\-]*",
 )
 
-_NOTEBOOK_IMPORT = re.compile(r'["\']import\s+([a-zA-Z_][\w.]*)')
+# These limits are deliberately conservative: env-suggest is an inspection
+# helper and must never turn a large consumer repository into an unbounded
+# filesystem or memory operation.
+MAX_NOTEBOOKS = 50
+MAX_PYTHON_FILES = 200
+MAX_VISITED_ENTRIES = 10_000
+MAX_FILE_BYTES = 5 * 1024 * 1024
+MAX_TOTAL_BYTES = 50 * 1024 * 1024
+_PRUNED_DIRS = {".git", ".venv", "node_modules", "__pycache__"}
 
 
-def _parse_requirements(path: Path) -> list[str]:
+@dataclass
+class _ScanState:
+    visited: int = 0
+    notebooks: int = 0
+    python_files: int = 0
+    bytes_read: int = 0
+    incomplete: list[str] = field(default_factory=list)
+
+    def note(self, message: str) -> None:
+        if message not in self.incomplete:
+            self.incomplete.append(message)
+
+
+def _parse_requirements(path: Path, *, state: _ScanState | None = None) -> list[str]:
     packages: list[str] = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    try:
+        size = path.stat().st_size
+        remaining = MAX_TOTAL_BYTES - state.bytes_read if state is not None else MAX_FILE_BYTES
+        if size > MAX_FILE_BYTES or remaining <= 0:
+            if state is not None:
+                state.note(f"requirements input exceeds scan budget: {path}")
+            return packages
+        read_limit = min(size, MAX_FILE_BYTES, remaining)
+        with path.open("rb") as handle:
+            raw = handle.read(read_limit)
+        if state is not None:
+            state.bytes_read += len(raw)
+            if len(raw) < size:
+                state.note(f"requirements input was capped at {read_limit} bytes: {path}")
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            if state is not None:
+                state.note(f"malformed UTF-8 requirements input: {path}")
+            return packages
+    except OSError:
+        if state is not None:
+            state.note(f"unreadable input: {path}")
+        return packages
+    for line in text.splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
@@ -42,26 +89,74 @@ def _parse_requirements(path: Path) -> list[str]:
     return packages
 
 
-def _scan_notebook_imports(path: Path, limit: int = 200) -> set[str]:
+def _scan_notebook_imports(
+    path: Path,
+    limit: int = 200,
+    *,
+    state: _ScanState | None = None,
+) -> set[str]:
     found: set[str] = set()
     try:
-        raw = path.read_text(encoding="utf-8", errors="replace")[:500_000]
+        size = path.stat().st_size
+        if size > MAX_FILE_BYTES:
+            if state is not None:
+                state.note(f"file exceeds {MAX_FILE_BYTES} bytes: {path}")
+            return found
+        remaining = MAX_TOTAL_BYTES - state.bytes_read if state is not None else MAX_FILE_BYTES
+        if remaining <= 0:
+            if state is not None:
+                state.note(f"total read budget exceeded at: {path}")
+            return found
+        read_limit = min(size, MAX_FILE_BYTES, remaining)
+        with path.open("rb") as handle:
+            raw_bytes = handle.read(read_limit)
+        if state is not None:
+            state.bytes_read += len(raw_bytes)
+            if len(raw_bytes) < size:
+                state.note(f"file read was capped at {read_limit} bytes: {path}")
+        try:
+            raw = raw_bytes.decode("utf-8")
+        except UnicodeDecodeError:
+            if state is not None:
+                state.note(f"malformed UTF-8 input: {path}")
+            return found
     except OSError:
+        if state is not None:
+            state.note(f"unreadable input: {path}")
         return found
 
     if path.suffix == ".ipynb":
         try:
             nb = json.loads(raw)
         except json.JSONDecodeError:
+            if state is not None:
+                state.note(f"malformed notebook JSON: {path}")
+            return found
+        if not isinstance(nb, dict) or not isinstance(nb.get("cells"), list):
+            if state is not None:
+                state.note(f"malformed notebook cells: {path}")
             return found
         for cell in nb.get("cells") or []:
-            if cell.get("cell_type") != "code":
+            if not isinstance(cell, dict):
+                if state is not None:
+                    state.note(f"malformed notebook cell: {path}")
                 continue
-            source = cell.get("source") or []
-            if isinstance(source, list):
+            cell_type = cell.get("cell_type")
+            if not isinstance(cell_type, str):
+                if state is not None:
+                    state.note(f"malformed notebook cell_type: {path}")
+                continue
+            if cell_type != "code":
+                continue
+            source = cell.get("source")
+            if isinstance(source, list) and all(isinstance(line, str) for line in source):
                 text = "".join(source)
+            elif isinstance(source, str):
+                text = source
             else:
-                text = str(source)
+                if state is not None:
+                    state.note(f"malformed notebook cell source: {path}")
+                continue
             for match in _IMPORT_RE.finditer(text):
                 found.add(match.group(1).split(".", 1)[0])
             if len(found) >= limit:
@@ -73,32 +168,87 @@ def _scan_notebook_imports(path: Path, limit: int = 200) -> set[str]:
     return found
 
 
-def collect_suggestions(roots: list[Path], *, max_notebooks: int = 50) -> dict[str, set[str]]:
-    """Return {source_label: set of package/module names}."""
+def _collect_suggestions_report(
+    roots: list[Path], *, max_notebooks: int = MAX_NOTEBOOKS
+) -> tuple[dict[str, set[str]], _ScanState]:
+    """Return suggestions and bounded-scan diagnostics."""
     result: dict[str, set[str]] = {}
-    nb_count = 0
+    state = _ScanState()
 
     for root in roots:
-        root = root.expanduser().resolve()
+        requested_root = root.expanduser()
+        if requested_root.is_symlink():
+            result[f"unreadable:{requested_root}"] = set()
+            state.note(f"root is a symlink: {requested_root}")
+            continue
+        root = requested_root.resolve(strict=False)
         if not root.exists():
             result[f"missing:{root}"] = set()
+            state.note(f"root not found: {root}")
+            continue
+        if not root.is_dir() or root.is_symlink():
+            result[f"unreadable:{root}"] = set()
+            state.note(f"root is not a directory: {root}")
             continue
 
         req = root / "requirements.txt"
-        if req.is_file():
-            result[f"requirements:{req}"] = set(_parse_requirements(req))
+        if req.is_symlink():
+            state.note(f"symlink skipped: {req}")
+        elif req.is_file():
+            result[f"requirements:{req}"] = set(_parse_requirements(req, state=state))
 
         imports: set[str] = set()
-        for pattern in ("**/*.ipynb", "**/*.py"):
-            for path in root.glob(pattern):
-                if path.is_file() and path.suffix == ".ipynb":
-                    if nb_count >= max_notebooks:
+        def _walk_error(error: OSError) -> None:
+            state.note(f"unreadable directory: {getattr(error, 'filename', root)}")
+
+        for current, dirs, files in os.walk(
+            root, topdown=True, onerror=_walk_error, followlinks=False
+        ):
+            current_path = Path(current)
+            state.visited += 1
+            if state.visited > MAX_VISITED_ENTRIES:
+                state.note(f"visited-entry limit ({MAX_VISITED_ENTRIES}) reached under: {root}")
+                break
+            dirs[:] = sorted(
+                name
+                for name in dirs
+                if name not in _PRUNED_DIRS
+                and not (current_path / name).is_symlink()
+            )
+            for name in sorted(files):
+                if state.visited >= MAX_VISITED_ENTRIES:
+                    state.note(f"visited-entry limit ({MAX_VISITED_ENTRIES}) reached under: {root}")
+                    break
+                state.visited += 1
+                path = current_path / name
+                if path.is_symlink() or not path.is_file():
+                    continue
+                if path.suffix == ".ipynb":
+                    if state.notebooks >= max_notebooks:
+                        state.note(f"notebook limit ({max_notebooks}) reached under: {root}")
                         continue
-                    nb_count += 1
-                imports |= _scan_notebook_imports(path)
+                    state.notebooks += 1
+                    imports |= _scan_notebook_imports(path, state=state)
+                elif path.suffix == ".py":
+                    if state.python_files >= MAX_PYTHON_FILES:
+                        state.note(f"Python-file limit ({MAX_PYTHON_FILES}) reached under: {root}")
+                        continue
+                    state.python_files += 1
+                    imports |= _scan_notebook_imports(path, state=state)
         if imports:
             result[f"notebooks:{root}"] = imports
 
+    return result, state
+
+
+def collect_suggestions(roots: list[Path], *, max_notebooks: int = MAX_NOTEBOOKS) -> dict[str, set[str]]:
+    """Return {source_label: set of package/module names}.
+
+    This compatibility wrapper intentionally retains the historical return
+    shape.  ``suggest_env`` uses the richer internal report to expose partial
+    scans to callers and to the command line.
+    """
+    result, _ = _collect_suggestions_report(roots, max_notebooks=max_notebooks)
     return result
 
 
@@ -147,7 +297,7 @@ def suggest_env(
     write_path: Path | None = None,
 ) -> tuple[list[str], int]:
     """Build suggestion lines; optionally write to write_path. Returns (lines, exit_code)."""
-    suggestions = collect_suggestions(roots)
+    suggestions, state = _collect_suggestions_report(roots)
     lines = _lines_from_suggestions(suggestions)
 
     for label, names in sorted(suggestions.items()):
@@ -160,10 +310,29 @@ def suggest_env(
         print(line)
 
     if write_path is not None:
-        write_path = write_path.expanduser().resolve()
-        write_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        requested_output = write_path.expanduser()
+        if requested_output.exists() or requested_output.is_symlink():
+            print(
+                f"fttp env-suggest: refusing to overwrite existing output: {requested_output}",
+                file=sys.stderr,
+            )
+            return lines, 1
+        write_path = requested_output.resolve(strict=False)
+        try:
+            write_path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="")
+        except OSError as exc:
+            print(f"fttp env-suggest: cannot write {write_path}: {exc}", file=sys.stderr)
+            return lines, 1
         print(f"fttp env-suggest: wrote {write_path}")
 
+    if state.incomplete:
+        print(
+            "fttp env-suggest: incomplete scan ({}); rerun after addressing the limits or inputs".format(
+                "; ".join(state.incomplete[:5])
+            ),
+            file=sys.stderr,
+        )
+        return lines, 1
     return lines, 0
 
 

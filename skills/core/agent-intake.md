@@ -12,11 +12,11 @@ description: SA0 workspace onboarding v2 — blocks 0–G with WHY-before-ASK; n
 | **CONSUMER_ONBOARD** | End user after install / first RUN | **Required** — blocks **0–G** with **WHY → ASK → YOU_DO** per block; **G0-intake** audit + user approval before HANDOFF |
 | **FRAMEWORK_SMOKE** | Maintainer post-B12 | **Do not ask** consumer blocks — placeholders + `intake_report.md` notes onboarding pending; no G0 approval |
 
-**Product path:** `fttp scaffold --slug NAME` or copy `templates/paper-workspace/` when CLI scaffold is unavailable. Future `fttp init` will ask the same questions as CONSUMER_ONBOARD.
+**Product path:** `fttp scaffold --slug NAME` or copy `templates/paper-workspace/` for a manual setup. Future `fttp init` may ask the same questions as CONSUMER_ONBOARD.
 
 ## Goal
 
-Configure **thesis → journal paper** under the [three-repo model](../docs/WORKSPACE_MODEL.md):
+Configure **thesis → journal paper** under the [three-repo model](../../docs/WORKSPACE_MODEL.md):
 
 - **REPO_FTTP** — framework (read-only for user data)
 - **SOURCES_RO** — thesis / verification trees (read-only)
@@ -32,10 +32,10 @@ Configure **thesis → journal paper** under the [three-repo model](../docs/WORK
 
 ## Read order
 
-1. [WORKSPACE_MODEL.md](../docs/WORKSPACE_MODEL.md) — three layers, slug rule, copy manifest.
-2. [ONBOARDING_RATIONALE.md](../docs/ONBOARDING_RATIONALE.md) — canonical WHY text per block (reuse in chat).
-3. [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md) — G0-intake checklist and closure tokens.
-4. [VENUE_TEMPLATE_ONBOARDING.md](../docs/VENUE_TEMPLATE_ONBOARDING.md) — Block G stub vs SA1 deep policy.
+1. [WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md) — three layers, slug rule, copy manifest.
+2. [ONBOARDING_RATIONALE.md](../../docs/ONBOARDING_RATIONALE.md) — canonical WHY text per block (reuse in chat).
+3. [USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md) — G0-intake checklist and closure tokens.
+4. [VENUE_TEMPLATE_ONBOARDING.md](../../docs/VENUE_TEMPLATE_ONBOARDING.md) — Block G stub vs SA1 deep policy.
 5. `fttp.config.json` or `workspace.config.json` if partial config exists.
 6. `templates/workspace.config.example.json` — `workspaceSlug`, `workflowProfile`, `writingMode`, `overleafPaper`, `paper.venueProfiles`, `readOnlyRoots[]`, `packs[]`.
 7. `templates/paper-workspace/` — scaffold tree for new repos.
@@ -52,7 +52,7 @@ Before **each** block (0–G):
 1. Emit **`WHY:`** (2–4 sentences) → **`ASK:`** (one clear question) → **`YOU_DO:`** (concrete user action).
 2. Wait for brief confirmation (`ok`, `understood`, `yes`) **or** the answer.
 3. Record `user_ack` / `skipped` + reason in `memory/intake_report.md`.
-4. Do **not** list questions without a WHY paragraph — see [ONBOARDING_RATIONALE.md](../docs/ONBOARDING_RATIONALE.md).
+4. Do **not** list questions without a WHY paragraph — see [ONBOARDING_RATIONALE.md](../../docs/ONBOARDING_RATIONALE.md).
 
 Chat language: user's choice (`es` / `en`); config and memory files stay **English**.
 
@@ -82,7 +82,7 @@ Chat language: user's choice (`es` / `en`); config and memory files stay **Engli
 
 **Agent steps:**
 
-1. Copy `REPO_FTTP/templates/paper-workspace/` → `PAPER_WS` (or run `fttp scaffold --slug <slug> --parent <dir>` when available).
+1. Run `fttp scaffold --slug <slug> --parent <dir>` (or copy `REPO_FTTP/templates/paper-workspace/` for a manual setup).
 2. Replace `{{WORKSPACE_SLUG}}` placeholders in scaffold `fttp.config.json`.
 3. Copy `REPO_FTTP/templates/memory/*` → `PAPER_WS/memory/` if missing (do not overwrite user-edited briefs without OK).
 4. Initialize `memory/user_approval_log.md` from `templates/memory/user_approval_log_TEMPLATE.md` (header + TBD rows; no secrets).
@@ -137,7 +137,7 @@ First login: `overleaf_login`, `overleaf_list_projects`. Write `memory/overleaf_
 |--|--|
 | **WHY** | Not everyone needs refactor, public release, or full MIP porting. Choosing a profile avoids spending time on agents you will skip. |
 | **ASK** | `paper_only` \| `paper_audit` \| `paper_audit_repro` \| `full_pipeline` |
-| **YOU_DO** | Acknowledge how many approval gates apply — see [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md) § Mandatory gates by `workflowProfile`. |
+| **YOU_DO** | Acknowledge how many approval gates apply — see [USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md) § Mandatory gates by `workflowProfile`. |
 
 **Agent:** Set `workflowProfile` in `fttp.config.json`. Tell user the **mandatory `gate_id` list** for their profile (e.g. `paper_audit` adds G4-evidence).
 
@@ -194,9 +194,9 @@ First login: `overleaf_login`, `overleaf_list_projects`. Write `memory/overleaf_
 3. Stub or update `paper/JOURNAL_GUIDELINES.md` with venue URL + checklist pointer.
 4. Set `templateDeferred: true` + date only if user explicitly defers (SA7/SA8 blocked until SA1 completes).
 
-Deep policy extraction is **SA1** — see [VENUE_TEMPLATE_ONBOARDING.md](../docs/VENUE_TEMPLATE_ONBOARDING.md).
+Deep policy extraction is **SA1** — see [VENUE_TEMPLATE_ONBOARDING.md](../../docs/VENUE_TEMPLATE_ONBOARDING.md).
 
-**Optional:** Pack `optimization-or` (yes/no) → `packs[]` in config — ask with WHY if user runs MIP/GIS thesis workflows ([PACKS.md](../docs/PACKS.md)).
+**Optional:** Pack `optimization-or` (yes/no) → `packs[]` in config — ask with WHY if user runs MIP/GIS thesis workflows ([PACKS.md](../../docs/PACKS.md)).
 
 ---
 
@@ -244,7 +244,7 @@ TAREA INCOMPLETA
 BLOQUEADO: no lanzar SA1 — missing approved row for G0-intake
 ```
 
-Details: [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md).
+Details: [USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md).
 
 ---
 

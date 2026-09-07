@@ -47,6 +47,11 @@ isProject: false
 > **Target:** NEW git repository `from-thesis-to-paper` — **not** inside `mi-investigacion-opt`.  
 > **Audience of this plan:** a **less capable executor model** — follow micro-steps literally; do not skip verification gates.
 
+> **Historical execution plan:** preserve the original todo history. The current
+> runtime contract and verification results are recorded in
+> [`docs/REFACTOR_CONTRACT.md`](../../docs/REFACTOR_CONTRACT.md) and
+> [`docs/REFACTOR_EXECUTION.md`](../../docs/REFACTOR_EXECUTION.md).
+
 ---
 
 ## 0. Executor contract (read first)

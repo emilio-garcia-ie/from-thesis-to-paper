@@ -58,17 +58,17 @@ Update the map in the **same pass** as the prose edit. G8-prose audit includes t
 ## Steps (SA8 writer)
 
 1. **One section per pass** unless plan explicitly parallelizes non-overlapping files.
-2. Default arc **`thesis_mirror`:** Results §5.1 (Cap.4-style) before §5.2 (Cap.5 / SSSMP).
+2. Follow the `narrative_arc` and section order in the signed brief. If the brief requests a thesis mirror, derive section names and order from that brief; do not assume chapter numbers or domain-specific extensions.
 3. Write native **English** IMRaD prose — do not paste Spanish thesis paragraphs.
 4. Tables: `\input{tables/...}` fragments; cell values from signed evidence path only.
-5. Mandatory intro phrase pattern: benchmark chapter results before multigraph extension (adapt wording, keep meaning).
+5. Introduce the contribution and evidence in the order approved in the brief; keep any benchmark or extension sequencing specific to the signed brief.
 6. Discrepancies (e.g. T002): document in `paper/REPRODUCIBILITY.md`, not Results footnotes unless brief says otherwise.
 7. Respect `writing_mode`: adapt with provenance map, or compose from brief only where mode allows.
 8. After each section batch, run **G8-prose** closure (below) before HANDOFF to SA9.
 
 ## G8-prose — AUDIT / APPROVE (mandatory)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md). Blocks SA9 until the agreed section batch is approved.
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md). Blocks SA9 until the agreed section batch is approved.
 
 After updating `paper/main.tex` (and `memory/provenance_map.md` when applicable):
 
@@ -104,8 +104,8 @@ Partial multi-session work: log which sections are approved in `notes`; do not H
 ## Forbidden
 
 - Inventing or rounding numeric results not in catalog / join audit / approved discrepancy policy.
-- Claiming VRPLTT base is implemented when brief forbids it.
-- Presenting SSSMP as proven before Cap.4 comparison tables in `thesis_mirror`.
+- Claiming an excluded capability or result when the signed brief forbids it.
+- Presenting an extension as proven before the comparison evidence required by the signed brief.
 - Spanish in `\section` body text.
 - Auto-translating thesis without user trigger of translation rule.
 

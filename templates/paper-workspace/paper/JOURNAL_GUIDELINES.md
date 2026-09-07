@@ -11,7 +11,7 @@
 | **Display name** | TBD |
 | **Author guidelines URL** | TBD — set in `fttp.config.json` → `paper.venueProfiles.primary.authorGuidelinesUrl` |
 | **Active manuscript** | `paper/main.tex` (may change to `main_journal.tex` after SA1) |
-| **LaTeX template** | BYO under `paper/latex/` — see [VENUE_TEMPLATE_ONBOARDING.md](../../docs/VENUE_TEMPLATE_ONBOARDING.md) |
+| **LaTeX template** | BYO under `paper/latex/` — see [VENUE_TEMPLATE_ONBOARDING.md](../../../docs/VENUE_TEMPLATE_ONBOARDING.md) |
 
 ## Checklist (complete in SA1)
 

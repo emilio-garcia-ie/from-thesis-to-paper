@@ -5,8 +5,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 dist/
+build/
 *.pdf
 .overleaf-mcp/
 python/fttp.egg-info/
 *.egg-info/
+test-results.xml
+integration-results.xml
 .DS_Store

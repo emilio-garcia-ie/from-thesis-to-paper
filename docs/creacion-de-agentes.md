@@ -1,17 +1,19 @@
 # Creación de agentes — orquestación from-thesis-to-paper
 
-Este documento exporta el plan de ejecución **BUILD** (framework `from-thesis-to-paper`, prompts B1–B12) y **RUN** (tesis → artículo en el workspace del **usuario final**, SA0–SA13). **BUILD** no recoge rutas de tesis: eso es **onboarding** (SA0 `CONSUMER_ONBOARD` o futuro `fttp init`) cuando alguien instala el paquete npm/npx. Cada subagente se lanza en **un chat de Cursor**: copia **un solo** bloque `text` (desde `### Prompt B1` o `### Prompt SA0` hasta el cierre `---` / `CIERRE DE TAREA`), sustituye `REPO_FTTP` y `REPO_WORKSPACE` por rutas absolutas, y espera **SE TERMINÓ LA TAREA COMPLETA** antes del siguiente paso. Repositorio del framework: **`REPO_FTTP`** = `/Users/emilio/Desktop/PaperEPN/from-thesis-to-paper` (repo standalone; ver [`FRAMEWORK_SPLIT.md`](FRAMEWORK_SPLIT.md)).
+Este documento exporta el plan de ejecución **BUILD** (framework `from-thesis-to-paper`, prompts B1–B12) y **RUN** (tesis → artículo en el workspace del **usuario final**, SA0–SA13). **BUILD** no recoge rutas de tesis: eso es **onboarding** (SA0 `CONSUMER_ONBOARD` o futuro `fttp init`) cuando alguien instala el paquete npm/npx. Cada subagente se lanza en **un chat de Cursor**: copia **un solo** bloque `text` (desde `### Prompt B1` o `### Prompt SA0` hasta el cierre `---` / `CIERRE DE TAREA`), sustituye `REPO_FTTP` y `REPO_WORKSPACE` por rutas absolutas, y espera **SE TERMINÓ LA TAREA COMPLETA** antes del siguiente paso. Repositorio del framework: **`REPO_FTTP`** = `<absolute path to framework clone>` (repo standalone; ver [`WORKSPACE_EXAMPLE_PAPEREPN.md`](WORKSPACE_EXAMPLE_PAPEREPN.md)).
+
+> **Historical export:** the executable source of current commands and task ordering is [`.cursor/plans/from-thesis-to-paper_orchestration.plan.md`](../.cursor/plans/from-thesis-to-paper_orchestration.plan.md). The prompt blocks below are retained for user history; use `fttp compile` or the configured venue build hook for LaTeX builds.
 
 **Un bloque por chat** (sustituye rutas, pega en Cursor):
 
 ```text
 PLAN: from-thesis-to-paper RUN | SUBAGENTE SA4 | TOPOLOGÍA: secuencial
-REPO_FTTP: /Users/emilio/Desktop/PaperEPN/from-thesis-to-paper
-REPO_WORKSPACE: /Users/emilio/Desktop/PaperEPN/mi-investigacion-opt
+REPO_FTTP: <absolute path to framework clone>
+REPO_WORKSPACE: <absolute path to user workspace>
 … (resto del bloque ### Prompt SA4 en este archivo)
 ```
 
-Framework: **`REPO_FTTP`** → `/Users/emilio/Desktop/PaperEPN/from-thesis-to-paper` · Workspace: **`REPO_WORKSPACE`** → `mi-investigacion-opt`
+Framework: **`REPO_FTTP`** → `<framework clone>` · Workspace: **`REPO_WORKSPACE`** → `<user workspace>`
 
 # from-thesis-to-paper — Subagent execution (BUILD + RUN)
 
@@ -90,7 +92,7 @@ Reference: `docs/TESTING.md` in framework repo (create in B7). Pattern from Pape
 | SA1, SA2, SA2b, SA7, SA8 | **No pytest** | — |
 | **SA4** | `smoke` if `codigo/` or `tests/` present | **Yes** — gate before SA7 |
 | SA5 | `smoke` then `integration` if OR pack + Gurobi | **Yes** |
-| SA9 | **LaTeX only** (`fttp paper compile`) | PDF fail blocks |
+| SA9 | **LaTeX only** (`fttp compile` or the configured venue build hook) | PDF fail blocks |
 | SA10 | Report last test status; run only if code_repro mode | — |
 | SA11 | `smoke` + `unit`; `integration` if MIP changed | **Yes** |
 | SA13 | `smoke` minimum in checklist | checklist item |
@@ -872,7 +874,7 @@ SKILL: skills/core/paper-figures-latex.md
 TAREAS:
 1. npx from-thesis-to-paper tables export (if needed)
 2. npx from-thesis-to-paper figures
-3. npx from-thesis-to-paper paper compile — or pdflatex per paper/README
+3. npx from-thesis-to-paper compile — or the configured venue build hook
 4. Fix compile errors only in REPO_WORKSPACE/paper/
 
 VERIFICACIÓN TESTS:
@@ -1012,4 +1014,4 @@ CIERRE DE TAREA
 
 ---
 
-**Plan maestro (especificación P0–P11):** `/Users/emilio/Desktop/PaperEPN/mi-investigacion-opt/.cursor/plans/from-thesis-to-paper_master.plan.md`
+**Plan maestro histórico (especificación P0–P11):** `<consumer-workspace>/.cursor/plans/from-thesis-to-paper_master.plan.md`

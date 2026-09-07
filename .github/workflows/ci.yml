@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python ${{ matrix.python }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ['3.10', '3.11', '3.14']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install --requirement requirements-dev.lock
+      - run: python -m pip install --no-deps --no-build-isolation .
+      - run: FTTP_PYTHON=python ./scripts/run_tests.sh smoke
+      - run: FTTP_PYTHON=python ./scripts/run_tests.sh unit
+      - run: FTTP_PYTHON=python ./scripts/run_tests.sh integration
+      - run: FTTP_PYTHON=python ./scripts/framework_smoke.sh
+      - run: python -m pytest tests/ --junitxml=test-results.xml --strict-markers --strict-config -q
+      - run: python ci/check_junit.py test-results.xml
+      - run: python -m pytest tests/integration/ --junitxml=integration-results.xml --strict-markers --strict-config -q
+      - run: python ci/check_junit.py integration-results.xml
+      - run: git diff --check
+      - run: python -m build --sdist --wheel --no-isolation --outdir artifacts .
+      - run: node --check packages/cli/src/cli.js
+      - run: |
+          mkdir -p "$GITHUB_WORKSPACE/artifacts"
+          npm pack --json --pack-destination "$GITHUB_WORKSPACE/artifacts"
+        working-directory: packages/cli
+      - run: python ci/check_artifacts.py artifacts --manifest artifacts/manifest.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: reports-${{ matrix.os }}-${{ matrix.python }}
+          path: |
+            test-results.xml
+            integration-results.xml
+            artifacts/
+
+  node:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '22']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ matrix.node }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install --requirement requirements-dev.lock
+      - run: python -m pip install --no-deps --no-build-isolation .
+      - run: node --check packages/cli/src/cli.js
+      - run: python -m pytest tests/test_node_cli.py --strict-markers --strict-config -q
+      - run: npm ci --ignore-scripts
+        working-directory: packages/cli
+      - run: npm pack --json --pack-destination "$RUNNER_TEMP"
+        working-directory: packages/cli

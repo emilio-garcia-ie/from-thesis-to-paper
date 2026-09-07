@@ -83,7 +83,11 @@ WORKFLOW_PROFILE_AGENTS: dict[str, tuple[str, ...]] = {
 
 
 def workflow_profile_agents(cfg: dict[str, Any]) -> tuple[str, ...]:
-    """Return ordered SA ids for the resolved workflowProfile (see ARCHITECTURE §4.3)."""
+    """Return the compatible SA membership tuple for a workflow profile.
+
+    The tuple describes profile membership and stable historical ordering. It is
+    not the runtime launch topology; the orchestration plan owns that graph.
+    """
     return WORKFLOW_PROFILE_AGENTS[workflow_profile(cfg)]
 
 
@@ -103,7 +107,7 @@ def resolve_config_path(start: Path | None = None) -> Path | None:
 
 
 def load_config(path: Path | None = None) -> dict[str, Any]:
-    """Load and minimally validate workspace JSON config."""
+    """Load and validate workspace JSON config before any side effect."""
     config_path = path or resolve_config_path()
     if config_path is None:
         names = ", ".join(CONFIG_FILENAMES)
@@ -112,9 +116,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
             f"Create {names} in the repo root, or set FTTP_CONFIG to an absolute path."
         )
 
+    config_path = Path(config_path).expanduser().resolve()
     try:
         raw = json.loads(config_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+    except (json.JSONDecodeError, OSError, UnicodeDecodeError) as exc:
         raise FttpConfigError(f"Invalid JSON in {config_path}: {exc}") from exc
 
     if not isinstance(raw, dict):
@@ -126,19 +131,32 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
             f"Config {config_path} is missing required field(s): {', '.join(missing)}"
         )
 
+    if not isinstance(raw.get("workspaceName"), str) or not raw["workspaceName"].strip():
+        raise FttpConfigError(f"Config {config_path}: workspaceName must be a non-empty string")
+    repo_value = raw.get("repoRoot")
+    if not isinstance(repo_value, str) or not repo_value.strip():
+        raise FttpConfigError(f"Config {config_path}: repoRoot must be a non-empty path")
+    repo = Path(repo_value).expanduser()
+    if not repo.is_absolute():
+        raise FttpConfigError(f"Config {config_path}: repoRoot must be absolute")
+
     paper = raw.get("paper")
     if not isinstance(paper, dict):
         raise FttpConfigError(f"Config {config_path}: 'paper' must be an object")
 
     for field in ("dir", "mainTex"):
-        if field not in paper:
+        if field not in paper or not isinstance(paper[field], str) or not paper[field].strip():
             raise FttpConfigError(
-                f"Config {config_path}: paper.{field} is required"
+                f"Config {config_path}: paper.{field} must be a non-empty string"
             )
 
     validate_hooks(raw, config_path)
     validate_venue_profiles(raw, config_path)
+    evidence = raw.get("evidence")
+    if evidence is not None and not isinstance(evidence, dict):
+        raise FttpConfigError(f"Config {config_path}: 'evidence' must be an object")
     validate_onboarding_fields(raw, config_path)
+    _validate_workspace_paths(raw, config_path)
 
     raw["_configPath"] = str(config_path)
     return raw
@@ -161,6 +179,33 @@ def _path_is_under(child: Path, parent: Path) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _validate_workspace_paths(cfg: dict[str, Any], config_path: Path | str) -> None:
+    """Validate all paths controlled by the framework, including symlink escapes."""
+    from fttp.paths import require_relative, resolve_under, validate_root_relationships
+
+    root = Path(cfg["repoRoot"]).expanduser().resolve()
+    paper = cfg["paper"]
+    paper_rel = require_relative(paper["dir"], "paper.dir")
+    paper_root = resolve_under(root, paper_rel, "paper.dir")
+    require_relative(paper["mainTex"], "paper.mainTex")
+    resolve_under(paper_root, paper["mainTex"], "paper.mainTex")
+    validate_root_relationships(root, cfg.get("readOnlyRoots"))
+
+    for name, rel in (cfg.get("evidence") or {}).items():
+        if rel is not None:
+            resolve_under(root, rel, f"evidence.{name}")
+    for name, rel in (cfg.get("hooks") or {}).items():
+        resolve_under(root, rel, f"hooks.{name}")
+    for profile_name, profile in (paper.get("venueProfiles") or {}).items():
+        if not isinstance(profile, dict):
+            continue
+        for field in ("guidelines", "templatePath", "build"):
+            if profile.get(field) is not None:
+                resolve_under(root, profile[field], f"paper.venueProfiles.{profile_name}.{field}")
+        if profile.get("mainTex") is not None:
+            resolve_under(paper_root, profile["mainTex"], f"paper.venueProfiles.{profile_name}.mainTex")
 
 
 def validate_onboarding_fields(
@@ -233,10 +278,10 @@ def validate_onboarding_fields(
                 raise FttpConfigError(
                     f"Config {label}: readOnlyRoots[{idx}] must be a non-empty path string"
                 )
-            if root is not None and _path_is_under(Path(entry).expanduser(), root):
-                raise FttpConfigError(
-                    f"Config {label}: readOnlyRoots[{idx}] must not be under repoRoot"
-                )
+            if root is not None:
+                from fttp.paths import validate_root_relationships
+                validate_root_relationships(root, read_only)
+                break
 
 
 def validate_hooks(cfg: dict[str, Any], config_path: Path | str | None = None) -> None:
@@ -285,7 +330,7 @@ def validate_venue_profiles(
             raise FttpConfigError(
                 f"Config {config_path}: paper.activeVenue must be a non-empty string"
             )
-        if profiles is not None and active not in profiles:
+        if not isinstance(profiles, dict) or active not in profiles:
             raise FttpConfigError(
                 f"Config {config_path}: paper.activeVenue '{active}' "
                 "not found in paper.venueProfiles"
@@ -365,14 +410,12 @@ def doctor_workspace_checks(
                     f"dirname '{root.name}'"
                 )
 
-    for idx, entry in enumerate(cfg.get("readOnlyRoots") or []):
-        if not isinstance(entry, str):
-            continue
-        ro_path = Path(entry).expanduser()
-        if _path_is_under(ro_path, root):
-            errors.append(
-                f"readOnlyRoots[{idx}] is under repoRoot (must be external): {ro_path}"
-            )
+    try:
+        from fttp.paths import validate_root_relationships
+
+        validate_root_relationships(root, cfg.get("readOnlyRoots"))
+    except FttpConfigError as exc:
+        errors.append(str(exc))
 
     overleaf = cfg.get("overleafPaper") or {}
     if isinstance(overleaf, dict):
@@ -437,11 +480,18 @@ def doctor_workspace_checks(
 
 
 def repo_root(cfg: dict[str, Any]) -> Path:
-    return Path(cfg["repoRoot"]).expanduser().resolve()
+    value = cfg.get("repoRoot")
+    if not isinstance(value, str) or not value.strip():
+        raise FttpConfigError("repoRoot must be a non-empty path")
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        raise FttpConfigError("repoRoot must be absolute")
+    return path.resolve()
 
 
 def paper_dir(cfg: dict[str, Any]) -> Path:
-    return repo_root(cfg) / cfg["paper"]["dir"]
+    from fttp.paths import resolve_under
+    return resolve_under(repo_root(cfg), cfg["paper"]["dir"], "paper.dir")
 
 
 def active_venue_profile(cfg: dict[str, Any]) -> dict[str, Any] | None:
@@ -457,9 +507,11 @@ def active_venue_profile(cfg: dict[str, Any]) -> dict[str, Any] | None:
 def resolve_active_main_tex(cfg: dict[str, Any]) -> Path:
     """Return main TeX for active venue profile or paper.mainTex default."""
     profile = active_venue_profile(cfg)
+    from fttp.paths import resolve_under
+    pdir = paper_dir(cfg)
     if profile and profile.get("mainTex"):
-        return paper_dir(cfg) / profile["mainTex"]
-    return paper_dir(cfg) / cfg["paper"]["mainTex"]
+        return resolve_under(pdir, profile["mainTex"], "paper.venueProfiles.active.mainTex")
+    return resolve_under(pdir, cfg["paper"]["mainTex"], "paper.mainTex")
 
 
 def paper_main_tex(cfg: dict[str, Any]) -> Path:
@@ -472,4 +524,5 @@ def hook_path(cfg: dict[str, Any], name: str) -> Path | None:
     rel = hooks.get(name)
     if not rel:
         return None
-    return repo_root(cfg) / rel
+    from fttp.paths import resolve_under
+    return resolve_under(repo_root(cfg), rel, f"hooks.{name}")

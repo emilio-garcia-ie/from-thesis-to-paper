@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,11 +10,22 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.optional-dependencies]
+dev = [
+  "pytest==9.0.3",
+  "build==1.4.0",
+  "setuptools==84.0.0",
+]
+
 [project.scripts]
 fttp = "fttp.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "python"}
+include-package-data = true
+
+[tool.setuptools.cmdclass]
+build_py = "build_support.build_py"
 
 [tool.setuptools.packages.find]
 where = ["python"]

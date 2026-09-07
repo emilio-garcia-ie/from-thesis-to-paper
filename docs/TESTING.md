@@ -23,10 +23,13 @@ When you change onboarding, entry files, or guardrails, do a manual **SA0** dry-
 
 | Dry-run mode | Where | What you verify |
 |-------------|-------|-----------------|
-| **`FRAMEWORK_SMOKE`** | `REPO_FTTP` | No thesis paths requested; scaffolding/doctor paths are sane; framework smoke/unit still PASS |
+| **`FRAMEWORK_SMOKE`** | `REPO_FTTP` | No thesis paths requested; scaffolding/doctor paths are sane; framework smoke/unit still pass |
 | **`CONSUMER_ONBOARD`** | A real paper workspace (`repoRoot`) | `workspaceSlug` + `repoRoot` + `readOnlyRoots` captured; gate **G0-intake** created; no cross-loading of entry files |
 
 The maintainer-only `FRAMEWORK_SMOKE` is the safe default when you do not have access to a consumer workspace. See [`docs/ONBOARDING.md`](ONBOARDING.md) § Maintainer-only.
+Run `./scripts/framework_smoke.sh` to exercise its disposable CLI walkthrough;
+the script reports the workspace and log paths for a live Cursor or Claude
+review, but does not replace that human sign-off.
 
 ## Framework tiers
 
@@ -34,7 +37,7 @@ The maintainer-only `FRAMEWORK_SMOKE` is the safe default when you do not have a
 |------|---------|----------------|---------|
 | **smoke** | `./scripts/run_tests.sh smoke` | No | Fast: config, hooks schema, dummy hook scripts, evidence CSV validators |
 | **unit** | `./scripts/run_tests.sh unit` | No | All tests under `tests/` (includes smoke-marked tests) |
-| **integration** | `./scripts/run_tests.sh integration` | No in framework | Placeholder — run MIP/integration in consumer workspace |
+| **integration** | `./scripts/run_tests.sh integration` | No in framework | Runs `tests/integration/`; consumer MIP/evidence integration remains separate |
 | **all** | `./scripts/run_tests.sh all` | No in framework | smoke + full unit suite |
 
 ## Smoke composition (framework)
@@ -45,22 +48,11 @@ Framework smoke is **pytest marker selection**:
 ./scripts/run_tests.sh smoke    # runs: pytest tests/ -m smoke -q
 ```
 
-As of 2026-05-25, the smoke suite includes these files (each contains at least one `@pytest.mark.smoke` test):
-
-1. `tests/test_config.py` — config resolution and JSON load
-2. `tests/test_hooks_schema.py` — optional `hooks` / `venueProfiles` validation
-3. `tests/test_run_hook.py` — subprocess hook delegation with fixture scripts
-4. `tests/test_venue_profiles.py` — `activeVenue` / `resolve_active_main_tex`
-5. `tests/test_scaffold.py` — scaffolded workspace structure + stub hooks
-6. `tests/test_doctor_extended.py` — doctor path checks (framework-only)
-7. `tests/test_workflow_profile.py` — workflowProfile → required gates behavior
-8. `tests/test_env_suggest.py` — env suggestion behavior (framework-only)
-9. `tests/test_venue_validate_cli.py` — venue validation CLI behavior
-10. `tests/test_venue_template.py` — venue template plumbing
-11. `tests/test_lineage_cli.py` — minimal CLI wiring for lineage
-12. `tests/test_evidence_csv_lineage.py` — generic lineage CSV validators
-13. `tests/test_evidence_gurobi_status.py` — Gurobi status mapping (no Gurobi required)
-14. `tests/test_latex_gates_template.py` — optional, when `FTTP_MAIN_TEX` points at a manuscript
+The smoke suite is every `@pytest.mark.smoke` test under `tests/`, including
+configuration/path safety, scaffold preservation, truthful pipeline and runner
+gates, bounded scanning, evidence validation, Node parity, distribution
+artifacts, mirror generation, documentation links, and the deterministic TeX
+fixture. The integration directory is run separately by the `integration` tier.
 
 Note: `./scripts/run_tests.sh unit` runs the full test suite under `tests/` (includes all smoke tests).
 
@@ -103,12 +95,7 @@ Before HANDOFF for any change under `python/fttp/`, `tests/`, `scripts/`, or `do
 
 Record **exit codes** in the closure. If either exit code ≠ 0, the work is **TAREA INCOMPLETA**.
 
-### Latest local run (framework)
-
-From `from-thesis-to-paper` repo root:
-
-- `./scripts/run_tests.sh smoke` → **55 passed**, exit code **0**
-- `./scripts/run_tests.sh unit` → **55 passed**, exit code **0**
+The CI workflow records current test counts in JUnit artifacts. Do not copy a historical count into a release note; a green run must also have zero skips, xfails, failures, errors, and empty selections.
 
 ## fttp CLI (after `pip install -e .`)
 

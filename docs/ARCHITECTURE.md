@@ -88,7 +88,7 @@ flowchart LR
   cfg --> t --> e --> f --> c --> pdf
 ```
 
-**Status in PaperEPN:** CLI and `python/fttp` are **planned** (P6–P7). PaperEPN today uses `scripts/paper/*` and `scripts/archaeology/*` for the same stages. See [`PAPER_PRODUCTION_PIPELINE.md`](PAPER_PRODUCTION_PIPELINE.md).
+The framework ships the Python CLI in `python/fttp` and the optional Node launcher in `packages/cli`; consumer workspaces may still retain their own `scripts/paper/*` and `scripts/archaeology/*` hooks. See [`PAPER_PRODUCTION_PIPELINE.md`](PAPER_PRODUCTION_PIPELINE.md).
 
 ---
 
@@ -101,7 +101,7 @@ Loaded from current working directory or path in environment variable `FTTP_CONF
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `workspaceName` | string | yes | Human label for logs and doctor output |
-| `workspaceSlug` | string | recommended | Canonical slug; should match Git folder and Overleaf **paper** project name (validator planned in P1) |
+| `workspaceSlug` | string | recommended | Canonical slug; validated when present and should match the Git folder and Overleaf **paper** project name |
 | `repoRoot` | string (absolute path) | yes | Writable **paper workspace** root (memory, paper, experimentos) — not `REPO_FTTP` |
 | `workflowProfile` | enum | no (default `paper_audit`) | `paper_only` \| `paper_audit` \| `paper_audit_repro` \| `full_pipeline` — see §4.3 |
 | `writingMode` | enum | no (default `thesis_adapt`) | `compose` \| `thesis_adapt` \| `hybrid` — see §4.3 |
@@ -120,7 +120,7 @@ Loaded from current working directory or path in environment variable `FTTP_CONF
 | `evidence.lineageCsv` | string | no | Relative path to log lineage CSV |
 | `hooks` | object | no | Script paths for lineage, tables, evidence, figures, compile |
 
-> **Implementation note:** `workspaceSlug`, `workflowProfile`, `writingMode`, `overleafPaper`, and `copyPolicy` are specified in onboarding v2 (P1); validators land in `python/fttp/config.py`. Until then, add them manually to `fttp.config.json` in new workspaces.
+> **Implementation note:** `workspaceSlug`, `workflowProfile`, `writingMode`, `overleafPaper`, and `copyPolicy` are validated by `python/fttp/config.py`. New workspaces still record their concrete values in `fttp.config.json` during onboarding.
 
 ### 4.3 `workflowProfile` and `writingMode`
 

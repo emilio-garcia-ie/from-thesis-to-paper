@@ -1,4 +1,5 @@
-"""Stub hook — replace with evidence bundle (SA4)."""
+"""Placeholder hook — replace with evidence bundle (SA4)."""
+FTTP_PLACEHOLDER_HOOK = True
 import sys
-print("fttp stub: evidence (no-op)")
-sys.exit(0)
+print("fttp placeholder: evidence is not configured; replace this hook", file=sys.stderr)
+sys.exit(1)

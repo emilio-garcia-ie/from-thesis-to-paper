@@ -15,6 +15,7 @@ from fttp.config import (
     repo_root,
     resolve_active_main_tex,
 )
+from fttp.paths import resolve_under
 
 _DOCUMENTCLASS_RE = re.compile(
     r"\\documentclass(?:\[[^\]]*\])?\{([^}]+)\}",
@@ -65,7 +66,7 @@ def validate_venue(cfg: dict[str, Any]) -> tuple[list[str], list[str]]:
         return errors, warnings
 
     if template_rel:
-        template_dir = root / template_rel
+        template_dir = resolve_under(root, template_rel, "paper.venueProfiles.active.templatePath")
         if not template_dir.is_dir():
             errors.append(f"templatePath not found: {template_dir}")
         elif not any(template_dir.iterdir()):
@@ -77,7 +78,7 @@ def validate_venue(cfg: dict[str, Any]) -> tuple[list[str], list[str]]:
 
     guidelines = profile.get("guidelines")
     if guidelines:
-        gpath = root / guidelines
+        gpath = resolve_under(root, guidelines, "paper.venueProfiles.active.guidelines")
         if not gpath.is_file():
             warnings.append(f"guidelines file missing: {gpath.relative_to(root)}")
 
@@ -91,15 +92,23 @@ def cmd_venue_validate(cfg: dict[str, Any] | None = None) -> int:
         print(f"fttp venue validate: {exc}", file=sys.stderr)
         return 1
 
-    root = repo_root(cfg)
+    try:
+        root = repo_root(cfg)
+        main_tex = resolve_active_main_tex(cfg)
+    except FttpConfigError as exc:
+        print(f"fttp venue validate: invalid configuration: {exc}", file=sys.stderr)
+        return 1
     active = (cfg.get("paper") or {}).get("activeVenue", "")
-    main_tex = resolve_active_main_tex(cfg)
     print(f"fttp venue validate: workspace={cfg.get('workspaceName')}")
     print(f"  repoRoot: {root}")
     print(f"  activeVenue: {active or '(default)'}")
     print(f"  mainTex: {main_tex}")
 
-    errors, warnings = validate_venue(cfg)
+    try:
+        errors, warnings = validate_venue(cfg)
+    except (FttpConfigError, OSError, UnicodeError) as exc:
+        print(f"fttp venue validate: cannot inspect configured paths: {exc}", file=sys.stderr)
+        return 1
     for warn in warnings:
         print(f"  WARNING: {warn}")
     if errors:

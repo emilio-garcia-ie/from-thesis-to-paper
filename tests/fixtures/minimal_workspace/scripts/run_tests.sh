@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Paper workspace test runner (placeholder until consumer hooks and tests exist).
+# Paper workspace test runner.
 # Usage: ./scripts/run_tests.sh smoke | unit | integration | all
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -20,8 +20,9 @@ for _candidate in \
 done
 
 if [[ -z "${_fttp_python}" ]]; then
-  echo "warn: fttp package not found. Clone from-thesis-to-paper next to this workspace" >&2
+  echo "FAIL: fttp package not found. Clone from-thesis-to-paper next to this workspace" >&2
   echo "      or set FTTP_FRAMEWORK_ROOT=/path/to/from-thesis-to-paper" >&2
+  exit 1
 fi
 
 if [[ -n "${_fttp_python}" ]]; then
@@ -34,37 +35,41 @@ if [[ ! -f "${ROOT}/fttp.config.json" ]]; then
   exit 1
 fi
 
-PY="${ROOT}/.venv/bin/python"
-if [[ ! -x "$PY" ]]; then
-  PY=python3
+if [[ -n "${FTTP_PYTHON:-}" ]]; then
+  PY="$FTTP_PYTHON"
+elif [[ -x "${ROOT}/.venv/bin/python" ]]; then
+  PY="${ROOT}/.venv/bin/python"
+else
+  PY="python3"
 fi
+if [[ ! -x "$PY" ]] && ! command -v "$PY" >/dev/null 2>&1; then
+  echo "FAIL: Python interpreter not found: $PY" >&2
+  exit 1
+fi
+
+run_pytest() {
+  local target="$1"
+  local marker="${2:-}"
+  if [[ ! -d "$ROOT/$target" ]]; then
+    echo "FAIL: required test directory is missing: $ROOT/$target" >&2
+    return 1
+  fi
+  if [[ -n "$marker" ]]; then
+    "$PY" -m pytest "$ROOT/$target" -m "$marker" -q
+  else
+    "$PY" -m pytest "$ROOT/$target" -q
+  fi
+}
 
 case "$MODE" in
   smoke)
-    if [[ -d "${ROOT}/tests" ]]; then
-      "$PY" -m pytest tests/ -m smoke -q 2>/dev/null || {
-        echo "note: no smoke tests yet — running fttp doctor only" >&2
-        "$PY" -m fttp doctor
-      }
-    else
-      echo "note: tests/ not present — install hooks per docs/ONBOARDING.md" >&2
-      if command -v "$PY" >/dev/null 2>&1; then
-        "$PY" -m fttp doctor
-      else
-        echo "PASS (stub): add tests/ and codigo/ when enabling full pipeline" >&2
-        exit 0
-      fi
-    fi
+    run_pytest tests smoke
     ;;
   unit|integration|all)
-    if [[ ! -d "${ROOT}/tests" ]]; then
-      echo "FAIL: tests/ directory missing. Port pipelines from thesis before running $MODE" >&2
-      exit 1
-    fi
     case "$MODE" in
-      unit)      exec "$PY" -m pytest tests/unit -q ;;
-      integration) exec "$PY" -m pytest tests/integration -q ;;
-      all)       exec "$PY" -m pytest tests/ -q ;;
+      unit)      run_pytest tests/unit ;;
+      integration) run_pytest tests/integration ;;
+      all)       run_pytest tests ;;
     esac
     ;;
   *)

@@ -19,6 +19,8 @@ GUROBI_STATUS: dict[int, str] = {
     13: "SUBOPTIMAL",
     14: "INPROGRESS",
     15: "USER_OBJ_LIMIT",
+    16: "WORK_LIMIT",
+    17: "MEM_LIMIT",
 }
 
 JSON_STATUS_ALLOW = frozenset({2, 3, 9})

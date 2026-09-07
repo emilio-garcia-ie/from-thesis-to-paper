@@ -14,11 +14,11 @@ description: SA9 figures, table fragments, LaTeX build verify — pipeline and l
 ## Read order
 
 1. `memory/paper_strategy_brief.md` figure flags (multigraph schematic, maps, route example).
-2. `memory/venue_policy.md` and `paper/JOURNAL_GUIDELINES.md` — **figure/table limits**, resolution, color policy, supplementary rules ([docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md) **G1-venue** must be approved).
+2. `memory/venue_policy.md` and `paper/JOURNAL_GUIDELINES.md` — **figure/table limits**, resolution, color policy, supplementary rules ([docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md) **G1-venue** must be approved).
 3. Active manuscript: `paper.mainTex` or `paper.venueProfiles[activeVenue].mainTex` from `fttp.config.json` (use `fttp doctor` to print resolved path).
 4. `docs/PAPER_PRODUCTION_PIPELINE.md` — `fttp figures` and `fttp compile` delegate to `hooks.figures` / `hooks.compile` or venue `build` under `repoRoot`.
 5. Consumer `scripts/run_tests.sh smoke` if touching generation scripts; framework maintainers run `./scripts/run_tests.sh smoke` in **from-thesis-to-paper** after CLI changes.
-6. Optional LaTeX gates: `FTTP_MAIN_TEX=/path/to/main.tex pytest tests/test_latex_gates_template.py -m smoke` (no `\codepath`, no `lineageDiscrepancy` in body, thesis cite keys).
+6. Optional LaTeX gates: `FTTP_MAIN_TEX=/path/to/main.tex pytest tests/test_latex_gates_template.py -m smoke`; keep the fixture's required structure and citation checks generic to the target brief.
 7. `memory/user_approval_log.md` — write **G9-figures** after build audit (below).
 
 ## Venue figure limits (mandatory check)
@@ -42,7 +42,7 @@ Before finalizing figures or submission PDF:
 
 ## G9-figures — AUDIT / APPROVE (mandatory)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md). **Blocks SA12 and SA13** until approved.
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md). **Blocks SA12 and SA13** until approved.
 
 After `paper/tables/*.tex`, `paper/figures/*`, and optional `paper/main.pdf` build:
 

@@ -18,7 +18,7 @@ description: SA9 figures, table fragments, LaTeX build verify — pipeline and l
 3. Active manuscript: `paper.mainTex` or `paper.venueProfiles[activeVenue].mainTex` from `fttp.config.json` (use `fttp doctor` to print resolved path).
 4. `docs/PAPER_PRODUCTION_PIPELINE.md` — `fttp figures` and `fttp compile` delegate to `hooks.figures` / `hooks.compile` or venue `build` under `repoRoot`.
 5. Consumer `scripts/run_tests.sh smoke` if touching generation scripts; framework maintainers run `./scripts/run_tests.sh smoke` in **from-thesis-to-paper** after CLI changes.
-6. Optional LaTeX gates: `FTTP_MAIN_TEX=/path/to/main.tex pytest tests/test_latex_gates_template.py -m smoke` (no `\codepath`, no `lineageDiscrepancy` in body, thesis cite keys).
+6. Optional LaTeX gates: `FTTP_MAIN_TEX=/path/to/main.tex pytest tests/test_latex_gates_template.py -m smoke`; keep the fixture's required structure and citation checks generic to the target brief.
 7. `memory/user_approval_log.md` — write **G9-figures** after build audit (below).
 
 ## Venue figure limits (mandatory check)

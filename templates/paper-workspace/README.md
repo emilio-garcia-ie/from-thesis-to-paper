@@ -107,7 +107,9 @@ Run the smoke gate after config or `codigo/` changes:
 2. Replace `{{WORKSPACE_SLUG}}` in `fttp.config.json`, this README title, and create an empty **Overleaf paper** project with the same display name.
 3. Copy `.env.example` → `.env` (never commit `.env`).
 4. Set `readOnlyRoots[]` to thesis notebooks, verification data, etc.
-5. Run SA0 (`agent-intake`) → `python -m fttp doctor` from the framework clone.
+5. Run SA0 (`agent-intake`) → `python -m fttp doctor` from the framework clone. Placeholder hooks are expected warnings until you implement them.
+
+The generated placeholder hooks exit nonzero so an incomplete pipeline cannot look successful. Replace the four stage hooks and compile hook before running `python -m fttp pipeline`; a successful compile must leave a non-empty `paper/main.pdf`. `--force` fills missing files only and preserves existing workspace bytes.
 
 ## Related documentation (framework repo)
 

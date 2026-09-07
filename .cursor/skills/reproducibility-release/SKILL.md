@@ -15,7 +15,7 @@ description: SA6 reproducibility and public release packaging — REPRODUCIBILIT
 
 1. `memory/paper_strategy_brief.md` `evidence_path`.
 2. `paper/REPRODUCIBILITY.md` if exists; `templates/memory/` repro template.
-3. `fttp.config.json` → `readOnlyRoots[]`, **`copyPolicy`** — [docs/WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md) §4 copy manifest.
+3. `fttp.config.json` → `readOnlyRoots[]`, **`copyPolicy`** — [docs/WORKSPACE_MODEL.md](../../../docs/WORKSPACE_MODEL.md) §4 copy manifest.
 4. Paper workspace **README** (repo root) — tier A/B expectations from `templates/paper-workspace/README.md` scaffold.
 5. `scripts/run_tests.sh` and smoke test docs.
 6. SA5 output if refactor created new `codigo/` modules.
@@ -31,7 +31,7 @@ Document what lives **inside PAPER_WS** vs what stays **read-only** under `readO
 | **External (Tier B)** | Verification trees, master notebooks, multi-GB logs under `readOnlyRoots[]` | **Never** copy wholesale; cite absolute or mount-relative paths only |
 | **Secrets** | `.env`, Overleaf passwords, Gurobi license files | Gitignored; document variable **names** only |
 
-Respect `copyPolicy.maxArtifactMb` and `copyPolicy.allowSymlinks` from config — same bounds as SA3 archaeology ([docs/WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md)).
+Respect `copyPolicy.maxArtifactMb` and `copyPolicy.allowSymlinks` from config — same bounds as SA3 archaeology ([docs/WORKSPACE_MODEL.md](../../../docs/WORKSPACE_MODEL.md)).
 
 ## Paper workspace README expectations
 
@@ -56,7 +56,7 @@ Update README only if SA6 adds release-specific commands or fixture paths — do
 
 ## G6-repro — AUDIT / APPROVE (profile-dependent)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md).
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md).
 
 | `workflowProfile` | G6 required? |
 |-------------------|--------------|

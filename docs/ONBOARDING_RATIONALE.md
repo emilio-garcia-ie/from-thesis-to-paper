@@ -34,7 +34,7 @@ Full product rules: [EXECUTOR_GUIDE.md](EXECUTOR_GUIDE.md) § Continuous onboard
 |--|--|
 | **WHY** | The framework does not store your thesis. You need one **writable** workspace for the manuscript, agent memory, and audited evidence copies. |
 | **ASK** | Absolute path to the **new** repo root (not `REPO_FTTP`). |
-| **YOU_DO** | Copy `templates/paper-workspace/` (or run `fttp scaffold` when available); optional `git init`. |
+| **YOU_DO** | Run `fttp scaffold` (or copy `templates/paper-workspace/` for a manual setup); optional `git init`. |
 
 ---
 

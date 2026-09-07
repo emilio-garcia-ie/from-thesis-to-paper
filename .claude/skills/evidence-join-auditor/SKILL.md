@@ -30,7 +30,7 @@ description: SA4 triangulation auditor — catalog vs log vs thesis table joins 
 
 ## G4-evidence — AUDIT / APPROVE (profile-dependent)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md).
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md).
 
 | `workflowProfile` | G4 required? |
 |-------------------|--------------|
@@ -66,6 +66,6 @@ BLOQUEADO: no lanzar SA7, SA8 — missing approved row for G4-evidence
 ## Verify
 
 - `memory/evidence_discrepancies.md` / `memory/discrepancy_registry.md` exists (may be empty if all OK).
-- Join report states match rate for Cap.4 and Cap.5 anchor experiments.
+- Join report states match rates for each experiment family and evidence anchor named in the signed brief.
 - When profile requires G4: `memory/user_approval_log.md` has **G4-evidence** `approved` before HANDOFF → SA7.
 - HANDOFF → SA7 (strategy) only after G4 approved or G4 waived for `paper_only`; async SA5 may start after SA4 per launch map.

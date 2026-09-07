@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,6 +18,8 @@ from fttp.config import (
     workflow_profile,
     writing_mode,
 )
+from fttp.execution import run_local_command
+from fttp.paths import resolve_under
 
 
 def _missing(msg: str) -> int:
@@ -26,19 +27,42 @@ def _missing(msg: str) -> int:
     return 1
 
 
+def _nonempty_file(path: Path) -> tuple[bool, str | None]:
+    """Return whether a path is a readable, non-empty regular file."""
+    try:
+        if not path.is_file():
+            return False, None
+        size = path.stat().st_size
+    except OSError as exc:
+        return False, str(exc)
+    return size > 0, None
+
+
+def _expected_pdf(root: Path, main_tex: Path) -> tuple[Path | None, str | None]:
+    """Resolve the generated PDF and reject a symlink escape from repoRoot."""
+    pdf = main_tex.with_suffix(".pdf")
+    try:
+        relative = pdf.relative_to(root)
+        return resolve_under(root, str(relative), "expected PDF"), None
+    except (ValueError, FttpConfigError) as exc:
+        return None, str(exc)
+
+
 def run_hook(name: str, cfg: dict[str, Any]) -> int:
     """Run hooks.<name> script under repoRoot; propagate exit code."""
     if name not in KNOWN_HOOKS:
         return _missing(f"fttp: unknown hook '{name}'")
 
-    script = hook_path(cfg, name)
+    try:
+        script = hook_path(cfg, name)
+        root = repo_root(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp: invalid configuration for hooks.{name}: {exc}")
     if script is None:
         return _missing(
             f"fttp: hooks.{name} is not set in config.\n"
             f"  Add hooks.{name} (relative path under repoRoot) in fttp.config.json."
         )
-
-    root = repo_root(cfg)
     if not script.is_file():
         return _missing(
             f"fttp: hook script not found:\n  {script}\n"
@@ -52,12 +76,7 @@ def run_hook(name: str, cfg: dict[str, Any]) -> int:
     else:
         cmd = [str(script)]
 
-    result = subprocess.run(
-        cmd,
-        cwd=str(root),
-        check=False,
-    )
-    return int(result.returncode)
+    return run_local_command(cmd, cwd=root)
 
 
 def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
@@ -66,7 +85,10 @@ def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
     except FttpConfigError as exc:
         return _missing(f"fttp doctor: {exc}")
 
-    root = repo_root(cfg)
+    try:
+        root = repo_root(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp doctor: invalid configuration: {exc}")
     issues: list[str] = []
     warnings: list[str] = []
     print(f"fttp doctor: workspace={cfg.get('workspaceName')}")
@@ -85,11 +107,17 @@ def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
     issues.extend(doc_errors)
     warnings.extend(doc_warnings)
 
-    pdir = paper_dir(cfg)
+    try:
+        pdir = paper_dir(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp doctor: invalid paper path: {exc}")
     if not pdir.is_dir():
         issues.append(f"paper.dir missing: {pdir}")
 
-    main_tex = resolve_active_main_tex(cfg)
+    try:
+        main_tex = resolve_active_main_tex(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp doctor: invalid mainTex path: {exc}")
     active = (cfg.get("paper") or {}).get("activeVenue", "")
     print(f"  activeVenue: {active or '(default)'}")
     print(f"  mainTex: {main_tex}")
@@ -105,17 +133,32 @@ def cmd_doctor(cfg: dict[str, Any] | None = None) -> int:
             if not rel:
                 issues.append(f"hooks.{name} not configured")
                 continue
-            path = root / rel
+            try:
+                path = resolve_under(root, rel, f"hooks.{name}")
+            except FttpConfigError as exc:
+                issues.append(str(exc))
+                continue
             status = "OK" if path.is_file() else "MISSING"
             print(f"  hooks.{name}: {rel} [{status}]")
             if status == "MISSING":
                 issues.append(f"hooks.{name} path missing: {path}")
+            elif path.is_file() and path.suffix in {".py", ".sh"}:
+                try:
+                    marker = path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    marker = ""
+                if "FTTP_PLACEHOLDER_HOOK" in marker:
+                    warnings.append(f"hooks.{name} is a placeholder and will fail until replaced: {rel}")
 
     evidence = cfg.get("evidence") or {}
     for key in ("catalog", "lineageCsv"):
         rel = evidence.get(key)
         if rel:
-            path = root / rel
+            try:
+                path = resolve_under(root, rel, f"evidence.{key}")
+            except FttpConfigError as exc:
+                issues.append(str(exc))
+                continue
             status = "OK" if path.is_file() else "MISSING"
             print(f"  evidence.{key}: {rel} [{status}]")
 
@@ -173,7 +216,7 @@ def _resolve_compile_target(cfg: dict[str, Any]) -> tuple[Path | None, str]:
 
     profile = active_venue_profile(cfg)
     if profile and profile.get("build"):
-        return repo_root(cfg) / profile["build"], "venue.build"
+        return resolve_under(repo_root(cfg), profile["build"], "paper.venueProfiles.active.build"), "venue.build"
 
     hook = hook_path(cfg, "compile")
     if hook is not None:
@@ -187,29 +230,60 @@ def cmd_compile(cfg: dict[str, Any] | None = None) -> int:
     except FttpConfigError as exc:
         return _missing(f"fttp compile: {exc}")
 
-    script, mode = _resolve_compile_target(cfg)
+    try:
+        script, mode = _resolve_compile_target(cfg)
+        root = repo_root(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp compile: invalid configuration: {exc}")
     if script is not None:
         if not script.is_file():
             return _missing(f"fttp compile: {mode} script not found:\n  {script}")
         print(f"fttp compile: running {mode} -> {script}")
-        root = repo_root(cfg)
         cmd = [sys.executable, str(script)] if script.suffix == ".py" else [str(script)]
-        result = subprocess.run(cmd, cwd=str(root), check=False)
-        return int(result.returncode)
+        code = run_local_command(cmd, cwd=root)
+        if code != 0:
+            return code
+        try:
+            pdf, pdf_error = _expected_pdf(root, resolve_active_main_tex(cfg))
+        except FttpConfigError as exc:
+            return _missing(f"fttp compile: invalid mainTex path: {exc}")
+        if pdf is None:
+            return _missing(f"fttp compile: invalid expected PDF path: {pdf_error}")
+        has_pdf, stat_error = _nonempty_file(pdf)
+        if stat_error:
+            return _missing(f"fttp compile: cannot inspect expected PDF {pdf}: {stat_error}")
+        if not has_pdf:
+            return _missing(
+                f"fttp compile: {mode} completed without a non-empty PDF:\n  {pdf}"
+            )
+        try:
+            pdf_size = pdf.stat().st_size
+        except OSError as exc:
+            return _missing(f"fttp compile: cannot inspect expected PDF {pdf}: {exc}")
+        print(f"fttp compile: OK — {pdf} ({pdf_size} bytes)")
+        return 0
 
-    main_tex = resolve_active_main_tex(cfg)
-    pdf = main_tex.with_suffix(".pdf")
+    try:
+        main_tex = resolve_active_main_tex(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp compile: invalid configuration: {exc}")
+    pdf, pdf_error = _expected_pdf(root, main_tex)
+    if pdf is None:
+        return _missing(f"fttp compile: invalid expected PDF path: {pdf_error}")
     if not main_tex.is_file():
         return _missing(
             f"fttp compile: main TeX not found:\n  {main_tex}\n"
             "  Set hooks.compile or paper.venueProfiles[].build."
         )
-    if not pdf.is_file():
+    has_pdf, stat_error = _nonempty_file(pdf)
+    if stat_error:
+        return _missing(f"fttp compile: cannot inspect expected PDF {pdf}: {stat_error}")
+    if not has_pdf:
         return _missing(
-            f"fttp compile: PDF not found (run build hook or latexmk):\n  {pdf}"
+            f"fttp compile: non-empty PDF not found (run build hook or latexmk):\n  {pdf}"
         )
 
-    print(f"fttp compile: OK — {pdf} exists")
+    print(f"fttp compile: OK — {pdf} exists (existence check; freshness not verified)")
     return 0
 
 
@@ -229,7 +303,10 @@ def cmd_lineage_validate(csv_path: Path | None, cfg: dict[str, Any] | None = Non
 
     from fttp.evidence.csv_lineage import validate_lineage_csv
 
-    root = repo_root(cfg)
+    try:
+        root = repo_root(cfg)
+    except FttpConfigError as exc:
+        return _missing(f"fttp lineage validate: invalid configuration: {exc}")
     if csv_path is None:
         evidence = cfg.get("evidence") or {}
         rel = evidence.get("lineageCsv")
@@ -237,9 +314,17 @@ def cmd_lineage_validate(csv_path: Path | None, cfg: dict[str, Any] | None = Non
             return _missing(
                 "fttp lineage validate: pass --csv or set evidence.lineageCsv in config."
             )
-        csv_path = root / rel
-
-    csv_path = csv_path.expanduser().resolve()
+        try:
+            csv_path = resolve_under(root, rel, "evidence.lineageCsv")
+        except FttpConfigError as exc:
+            return _missing(f"fttp lineage validate: invalid evidence path: {exc}")
+    else:
+        candidate = csv_path.expanduser().resolve(strict=False)
+        try:
+            candidate.relative_to(root)
+        except ValueError:
+            return _missing(f"fttp lineage validate: CSV must be under repoRoot: {candidate}")
+        csv_path = candidate
     if not csv_path.is_file():
         return _missing(f"fttp lineage validate: CSV not found:\n  {csv_path}")
 

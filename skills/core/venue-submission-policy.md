@@ -17,8 +17,8 @@ description: SA1 venue scout — BYO template, G1-venue gate, journal constraint
 1. `memory/intake_report.md` — Block G answers (venue id, guidelines URL, template access, `templateDeferred`).
 2. `fttp.config.json` → `paper.activeVenue`, `paper.venueProfiles[activeVenue]` (`mainTex`, `templatePath`, `templateSource`, `templateDeferred`).
 3. `memory/venue_template_manifest.md` — SA0 stub; SA1 completes file list and `\documentclass` verification.
-4. [VENUE_TEMPLATE_ONBOARDING.md](../docs/VENUE_TEMPLATE_ONBOARDING.md) — BYO split SA0 vs SA1.
-5. [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md) — **G1-venue** AUDIT/APPROVE protocol.
+4. [VENUE_TEMPLATE_ONBOARDING.md](../../docs/VENUE_TEMPLATE_ONBOARDING.md) — BYO split SA0 vs SA1.
+5. [USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md) — **G1-venue** AUDIT/APPROVE protocol.
 6. `paper/JOURNAL_GUIDELINES.md` — expand checklist after policy extraction.
 7. `memory/user_approval_log.md` — confirm **G0-intake** approved before starting; write **G1-venue** row after user OK.
 8. `skills/core/paper-strategy.md` — cross-check only **after** `memory/venue_policy.md` exists (do not run SA7 before SA1 on greenfield).
@@ -40,7 +40,7 @@ description: SA1 venue scout — BYO template, G1-venue gate, journal constraint
 ### 1 — Inherit SA0 stub
 
 - Read `memory/intake_report.md` venue section and `memory/venue_template_manifest.md`.
-- If `templateDeferred: true`, record date and `provisional_class` in manifest; **SA8 remains blocked** until SA1 completes with final template (see [VENUE_TEMPLATE_ONBOARDING.md](../docs/VENUE_TEMPLATE_ONBOARDING.md)).
+- If `templateDeferred: true`, record date and `provisional_class` in manifest; **SA8 remains blocked** until SA1 completes with final template (see [VENUE_TEMPLATE_ONBOARDING.md](../../docs/VENUE_TEMPLATE_ONBOARDING.md)).
 
 ### 2 — BYO template install (user copies; agent verifies)
 
@@ -86,7 +86,7 @@ Sections (minimum):
 
 ### 6 — G1-venue AUDIT and APPROVE (mandatory)
 
-Per [USER_APPROVAL_GATES.md](../docs/USER_APPROVAL_GATES.md):
+Per [USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md):
 
 1. **`AUDIT: G1-venue`** — checklist: `memory/venue_policy.md`, `paper/JOURNAL_GUIDELINES.md`, `paper/latex/**`, `memory/venue_template_manifest.md` (page limits plausible; `\documentclass` matches files; license OK to copy).
 2. **`APPROVE_ASK:`** — user replies `APPROVED: G1-venue` or `APROBADO: G1-venue`.

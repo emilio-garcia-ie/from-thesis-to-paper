@@ -8,7 +8,7 @@ description: SA3 evidence archaeologist — twin notebooks, Excel summaries, cat
 ## Triggers
 
 - Parallel or sequential gate after SA2b; before SA4 join audit.
-- User asks to “find thesis numbers”, “archaeology”, “which log matches T###”.
+- User asks to “find thesis numbers”, “archaeology”, or which log matches an experiment ID.
 - Building or refreshing `memory/thesis_experiment_catalog.md`.
 
 ## Read order
@@ -16,7 +16,7 @@ description: SA3 evidence archaeologist — twin notebooks, Excel summaries, cat
 1. `memory/workspace_intake.md` and `fttp.config.json` — `readOnlyRoots`, **`copyPolicy`**.
 2. `memory/thesis_experiment_run_artifacts.md` or template (artifact glossary).
 3. Excel/CSV summaries under verification trees (**search, do not cat huge logs**).
-4. Master notebooks in `Thesis Code/` (read-only).
+4. Master notebooks in the configured source roots (read-only).
 5. [docs/WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md) §4 — copy manifest (what may enter writable `experimentos/evidence/`).
 
 ## Copy policy manifest (`copyPolicy`)

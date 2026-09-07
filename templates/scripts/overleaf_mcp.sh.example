@@ -3,7 +3,9 @@
 # Load credentials from .env (never commit secrets).
 
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+# Install this file as <workspace>/scripts/overleaf_mcp.sh; the workspace is
+# therefore the parent of the scripts directory.
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ -f "${ROOT}/.env" ]]; then

@@ -8,7 +8,7 @@ description: SA3 evidence archaeologist — twin notebooks, Excel summaries, cat
 ## Triggers
 
 - Parallel or sequential gate after SA2b; before SA4 join audit.
-- User asks to “find thesis numbers”, “archaeology”, “which log matches T###”.
+- User asks to “find thesis numbers”, “archaeology”, or which log matches an experiment ID.
 - Building or refreshing `memory/thesis_experiment_catalog.md`.
 
 ## Read order
@@ -16,8 +16,8 @@ description: SA3 evidence archaeologist — twin notebooks, Excel summaries, cat
 1. `memory/workspace_intake.md` and `fttp.config.json` — `readOnlyRoots`, **`copyPolicy`**.
 2. `memory/thesis_experiment_run_artifacts.md` or template (artifact glossary).
 3. Excel/CSV summaries under verification trees (**search, do not cat huge logs**).
-4. Master notebooks in `Thesis Code/` (read-only).
-5. [docs/WORKSPACE_MODEL.md](../../docs/WORKSPACE_MODEL.md) §4 — copy manifest (what may enter writable `experimentos/evidence/`).
+4. Master notebooks in the configured source roots (read-only).
+5. [docs/WORKSPACE_MODEL.md](../../../docs/WORKSPACE_MODEL.md) §4 — copy manifest (what may enter writable `experimentos/evidence/`).
 
 ## Copy policy manifest (`copyPolicy`)
 
@@ -42,7 +42,7 @@ Record planned or completed copies in `memory/evidence_archaeology_report.md` (p
 
 ## G4-evidence (preparation only at SA3)
 
-SA3 is **read-only archaeology** — there is **no user approval gate at SA3**. Mandatory checkpoint **G4-evidence** runs in **SA4** after catalog and join artifacts exist ([docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md)).
+SA3 is **read-only archaeology** — there is **no user approval gate at SA3**. Mandatory checkpoint **G4-evidence** runs in **SA4** after catalog and join artifacts exist ([docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md)).
 
 At SA3: ensure every table id the paper will need is listed with `OK` | `TBD` | `DISCREPANCY` so SA4 can surface them for user visibility before SA7.
 

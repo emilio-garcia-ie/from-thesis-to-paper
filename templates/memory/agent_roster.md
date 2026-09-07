@@ -34,7 +34,7 @@ on-demand: SA10 → SA11  |  SA12 ~> after SA9
 | SA7 | Paper strategist | `skills/core/paper-strategy.md` | no |
 | SA8 | Scientific writer | `skills/core/scientific-writing.md` | no |
 | SA9 | Figures + LaTeX verify | `skills/core/paper-figures-latex.md` | no |
-| SA10 | Peer reviewer | `skills/core/peer-review.md` | no |
+| SA10 | Peer reviewer (on-demand) | `skills/core/scientific-writing.md` — **SA10 peer review mode** (no separate `peer-review.md`) | no |
 | SA11 | Refactor fix | `skills/packs/optimization-or/refactor-port-mip.md` | optional |
 | SA12 | Overleaf sync (paper project) | `skills/core/overleaf-sync-optional.md` | no |
 | SA13 | Submission clerk | `skills/core/submission-clerk.md` | no |

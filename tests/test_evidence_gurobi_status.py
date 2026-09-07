@@ -17,6 +17,12 @@ def test_termination_from_gurobi_status():
 
 
 @pytest.mark.smoke
+def test_work_and_memory_limits_round_trip():
+    assert termination_from_gurobi_status(16) == "WORK_LIMIT"
+    assert termination_from_gurobi_status(17) == "MEM_LIMIT"
+
+
+@pytest.mark.smoke
 def test_candidate_from_status_code_infeasible_clears_objective():
     term, obj = candidate_from_status_code(3, objective=1.0)  # type: ignore[misc]
     assert term == "INFEASIBLE"

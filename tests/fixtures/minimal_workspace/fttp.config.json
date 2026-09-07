@@ -2,7 +2,7 @@
   "_note": "SA0: replace minimal-ws and all /path/to/... placeholders. Never commit real secrets — use .env for Overleaf.",
   "workspaceName": "minimal-ws",
   "workspaceSlug": "minimal-ws",
-  "repoRoot": "/Users/emilio/Desktop/PaperEPN/from-thesis-to-paper/tests/fixtures/minimal-ws",
+  "repoRoot": "/path/to/minimal-ws",
   "workflowProfile": "paper_audit",
   "writingMode": "thesis_adapt",
   "overleafPaper": {

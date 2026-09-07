@@ -25,7 +25,8 @@ description: SA2 narrative interview — contributions, arc, forbidden claims be
    - Benchmark-before-extension ordering required?
    - What must **not** be claimed (e.g. unimplemented baselines)?
 2. Propose `narrative_arc`: `thesis_mirror` | `contribution_first` | `integrated` — default `thesis_mirror` unless user overrides.
-3. List **forbidden_claims** explicitly (VRPLTT base implemented, SSSMP before Cap.4 tables, etc.).
+3. List **forbidden_claims** explicitly, using only the claim boundaries recorded
+   in the signed brief; keep domain examples in a separate example workspace.
 4. Draft outline bullets for Introduction and Results order; no LaTeX yet.
 5. Write `memory/narrative_interview.md` with dated Q&A and recommended arc.
 6. If user cannot decide arc → stop with **ASK USER**; do not proceed to SA8.

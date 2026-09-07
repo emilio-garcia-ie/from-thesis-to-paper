@@ -1,0 +1,11 @@
+include python/build_support.py
+include LICENSE
+recursive-include templates/paper-workspace *
+prune .git
+prune .venv
+prune build
+prune dist
+prune node_modules
+global-exclude .env
+global-exclude *.py[cod]
+global-exclude __pycache__

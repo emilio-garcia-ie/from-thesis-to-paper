@@ -15,7 +15,8 @@ description: SA7 paper strategist — signed brief, narrative arc, evidence_path
 
 1. `memory/narrative_interview.md`, `memory/venue_policy.md`, `memory/evidence_discrepancies.md`.
 2. `memory/glossary_thesis_en.md` (must be user-approved).
-3. Legacy `memory/paper_strategy_brief.md` if migrating from PaperEPN — merge, do not silently delete decisions.
+3. Legacy `memory/paper_strategy_brief.md` when present — merge, do not silently
+   delete decisions.
 
 ## Steps
 
@@ -23,7 +24,7 @@ description: SA7 paper strategist — signed brief, narrative arc, evidence_path
    - `narrative_arc` (default `thesis_mirror`).
    - `evidence_path`: `recompute_A` | `thesis_only_B` | `hybrid_B_plus`.
    - **`writing_mode`**: `thesis_adapt` | `compose` | `hybrid` — copy from `fttp.config.json` `writingMode` unless user overrides in SA0; SA8 prose and provenance rules depend on this field.
-   - Cap.4 / Cap.5 table scope (full vs summary rows).
+   - Source-section and table scope (full vs summary rows), as defined by the brief.
    - `t002_policy` and other named discrepancy policies.
 2. List `forbidden_claims` copied from SA2 plus any new from SA4.
 3. Align claims with **G2-narrative** and **G4-evidence** (when profile requires G4): no strategy that hides `TBD`/`DISCREPANCY` rows.
@@ -34,7 +35,7 @@ description: SA7 paper strategist — signed brief, narrative arc, evidence_path
 
 ## G7-strategy — AUDIT / APPROVE (mandatory)
 
-Per [docs/USER_APPROVAL_GATES.md](../../docs/USER_APPROVAL_GATES.md). **Blocks SA8** until approved in `memory/user_approval_log.md`.
+Per [docs/USER_APPROVAL_GATES.md](../../../docs/USER_APPROVAL_GATES.md). **Blocks SA8** until approved in `memory/user_approval_log.md`.
 
 After the brief is written and internally consistent:
 
